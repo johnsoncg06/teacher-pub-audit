@@ -12,6 +12,7 @@ on:
       - "version_info.txt"
       - "icon.*"
       - ".github/workflows/**"
+      - "docs/**"
   workflow_dispatch:
 
 # 縮小體積：不再整包收集 pywebview，只帶本平台需要的視窗元件與鑰匙圈後端，並排除用不到的標準庫
@@ -192,6 +193,7 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           path: art
@@ -202,6 +204,7 @@ jobs:
           cp art/TeacherPubAudit-Windows/*.exe rel/TeacherPubAudit_Windows_Setup.exe
           f=$(ls art/TeacherPubAudit-macOS-AppleSilicon/*.dmg 2>/dev/null | head -1); [ -n "$f" ] && cp "$f" rel/TeacherPubAudit_Mac_AppleSilicon.dmg
           f=$(ls art/TeacherPubAudit-macOS-Intel/*.dmg 2>/dev/null | head -1); [ -n "$f" ] && cp "$f" rel/TeacherPubAudit_Mac_Intel.dmg
+          cp "docs/教師論文盤點工具_圖解使用說明書.pdf" rel/TeacherPubAudit_Manual_zh-TW.pdf
           (cd rel && sha256sum * > SHA256SUMS.txt)
           ls -la rel
       - name: 建立 Release
@@ -217,6 +220,7 @@ jobs:
           | Windows 10／11 | `TeacherPubAudit_Windows_Setup.exe` |
           | Mac（Apple 晶片 Apple silicon, M1+） | `TeacherPubAudit_Mac_AppleSilicon.dmg` |
           | Mac（Intel） | `TeacherPubAudit_Mac_Intel.dmg` |
+          | 圖解使用說明書 Manual (zh-TW) | `TeacherPubAudit_Manual_zh-TW.pdf` |
 
           **第一次開啟**：Windows 出現「Windows 已保護您的電腦」→「其他資訊」→「仍要執行」；Mac 在 App 上按右鍵 →「打開」。
           **First launch**: Windows: "More info" → "Run anyway". Mac: right-click the app → "Open".

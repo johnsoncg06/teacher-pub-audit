@@ -21,8 +21,30 @@ A desktop app for auditing faculty members' annual publications in Web of Scienc
 | Windows 10/11 | [**Windows installer**](https://github.com/johnsoncg06/teacher-pub-audit/releases/latest/download/TeacherPubAudit_Windows_Setup.exe) |
 | Mac (Apple silicon, M1 or later) | [**Mac (Apple silicon) .dmg**](https://github.com/johnsoncg06/teacher-pub-audit/releases/latest/download/TeacherPubAudit_Mac_AppleSilicon.dmg) |
 | Mac (Intel) | [**Mac (Intel) .dmg**](https://github.com/johnsoncg06/teacher-pub-audit/releases/latest/download/TeacherPubAudit_Mac_Intel.dmg) |
+| User manual | [**Illustrated manual PDF** (Traditional Chinese)](https://github.com/johnsoncg06/teacher-pub-audit/releases/latest/download/TeacherPubAudit_Manual_zh-TW.pdf) |
 
 Not sure which Mac you have? Apple menu → "About This Mac": choose Apple silicon if "Chip" starts with Apple M, or Intel if "Processor" says Intel. All versions and change history are on the [Releases](https://github.com/johnsoncg06/teacher-pub-audit/releases) page.
+
+## User manual
+
+- [**Read the illustrated manual online**](docs/%E6%95%99%E5%B8%AB%E8%AB%96%E6%96%87%E7%9B%A4%E9%BB%9E%E5%B7%A5%E5%85%B7_%E5%9C%96%E8%A7%A3%E4%BD%BF%E7%94%A8%E8%AA%AA%E6%98%8E%E6%9B%B8.pdf) (PDF, 30 pages, opens directly on GitHub; Traditional Chinese)
+- [**Download the manual (PDF)**](https://github.com/johnsoncg06/teacher-pub-audit/releases/latest/download/TeacherPubAudit_Manual_zh-TW.pdf) (published with each release)
+- Inside the app, "說明與常見問題" (Help & FAQ; ⌘? or Ctrl+?, F1) offers the same content with search
+
+The manual covers installation, an illustrated walkthrough of all eight steps, applying for a WoS account and Starter API key, the two ways to get data (API inside the app or WoS web export), report fields, data storage, updating and uninstalling, and 57 FAQs. It is currently available in Traditional Chinese only.
+
+**Workflow**
+
+| Step | What you do |
+|---|---|
+| 1 Audit scope | Set the school, college, year and document types (Article and Review by default) |
+| 2 Faculty roster | Import the roster (.xlsx, .xls, .csv) |
+| 3 English names | Confirm each faculty member's English name and search variants |
+| 4 WoS data | Retrieve data with your API key inside the app, or import WoS web exports |
+| 5 Matching | Papers are matched by author and affiliation; possible same-name authors are flagged |
+| 6 Journal quality | JIF and JCR quartile (Q1–Q4) are added by ISSN; an official JCR export can be imported |
+| 7 Manual review | Confirm whether each flagged paper belongs to the faculty member |
+| 8 Report | Export per-faculty summaries, per-paper lists and journal tables, or print to PDF |
 
 ## Building from source (developers)
 Every push of app-related files to `main` triggers a GitHub Actions build and publishes it to Releases:
@@ -44,6 +66,7 @@ Each build runs automated self-tests on the packaged app (window components, key
 - `app.html`: the app interface (same as the web version, generated from the app source).
 - `setup.iss`: the Windows installer script (Inno Setup).
 - `version_info.txt`: version information embedded in the Windows executable.
+- `docs/`: the illustrated user manual (PDF).
 - `.github/workflows/build.yml`: the automated build configuration.
 
 The API key is stored only in the system's secure storage on the user's computer. It is never written to a file or uploaded.
