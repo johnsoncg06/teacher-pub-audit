@@ -1,0 +1,16 @@
+# UTF-8
+VSVersionInfo(
+  ffi=FixedFileInfo(filevers=(1, 0, 0, 0), prodvers=(1, 0, 0, 0), mask=0x3f, flags=0x0, OS=0x40004, fileType=0x1, subtype=0x0, date=(0, 0)),
+  kids=[
+    StringFileInfo([StringTable('040404B0', [
+      StringStruct('CompanyName', '中國醫藥大學 醫學院（製作：醫資三甲 江桂宏、醫學二乙 葉睿穎）'),
+      StringStruct('FileDescription', '教師論文盤點工具'),
+      StringStruct('FileVersion', '1.0.0'),
+      StringStruct('InternalName', 'TeacherPubAudit'),
+      StringStruct('LegalCopyright', '醫資三甲 江桂宏、醫學二乙 葉睿穎'),
+      StringStruct('OriginalFilename', 'TeacherPubAudit.exe'),
+      StringStruct('ProductName', '教師論文盤點工具'),
+      StringStruct('ProductVersion', '1.0.0')])]),
+    VarFileInfo([VarStruct('Translation', [0x0404, 1200])])
+  ]
+)

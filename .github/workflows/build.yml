@@ -22,7 +22,7 @@ env:
 
 jobs:
   windows:
-    name: Windows (.exe)
+    name: Windows（安裝程式）
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,12 +31,21 @@ jobs:
           python-version: "3.12"
       - name: 安裝套件
         run: pip install -r requirements.txt
+      - name: 自行編譯 PyInstaller 啟動程式（降低防毒誤判）
+        shell: bash
+        env:
+          PYINSTALLER_COMPILE_BOOTLOADER: "1"
+        run: |
+          V=$(python -c "import PyInstaller;print(PyInstaller.__version__)")
+          pip install --force-reinstall --no-deps --no-binary pyinstaller "pyinstaller==$V"
+          python -c "import PyInstaller,os;d=os.path.join(os.path.dirname(PyInstaller.__file__),'bootloader','Windows-64bit-intel');print(os.listdir(d))"
       - name: 基本檢查
         run: python -c "import main; print(main.Api().info()); print(main.Api().key_status())"
-      - name: 打包
+      - name: 打包（資料夾模式）
         shell: bash
         run: >-
-          pyinstaller --noconfirm --onefile --windowed --name TeacherPubAudit --icon icon.ico
+          pyinstaller --noconfirm --onedir --windowed --name TeacherPubAudit --icon icon.ico
+          --version-file version_info.txt
           --add-data "app.html;."
           --collect-data webview
           --hidden-import webview.platforms.winforms --hidden-import webview.platforms.edgechromium
@@ -46,23 +55,47 @@ jobs:
       - name: 自我檢查（元件、鑰匙圈、HTTPS）
         shell: pwsh
         run: |
-          $p = Start-Process dist/TeacherPubAudit.exe -ArgumentList "--selftest","selftest.json" -Wait -PassThru
+          $p = Start-Process dist/TeacherPubAudit/TeacherPubAudit.exe -ArgumentList "--selftest","selftest.json" -Wait -PassThru
           Get-Content selftest.json
           if ($p.ExitCode -ne 0) { throw "自我檢查失敗" }
       - name: 自我檢查（實際開啟視窗）
         shell: pwsh
         run: |
-          $p = Start-Process dist/TeacherPubAudit.exe -ArgumentList "--selftest-gui","gui.json" -Wait -PassThru
+          $p = Start-Process dist/TeacherPubAudit/TeacherPubAudit.exe -ArgumentList "--selftest-gui","gui.json" -Wait -PassThru
           Get-Content gui.json
           if ($p.ExitCode -ne 0) { throw "視窗自我檢查失敗" }
-      - name: 體積
-        shell: pwsh
-        run: Get-Item dist/TeacherPubAudit.exe | Select-Object Name, @{n="MB";e={[math]::Round($_.Length/1MB,2)}}
-      - name: 重新命名
+      - name: 製作安裝程式
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force out | Out-Null
-          Copy-Item dist/TeacherPubAudit.exe "out/教師論文盤點工具.exe"
+          $lang = "$PWD\ChineseTraditional.isl"
+          try { Invoke-WebRequest "https://raw.githubusercontent.com/jrsoftware/issrc/main/Files/Languages/Unofficial/ChineseTraditional.isl" -OutFile $lang } catch { }
+          if (-not (Test-Path $lang)) { choco install innosetup -y --no-progress | Out-Null }
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) { choco install innosetup -y --no-progress | Out-Null }
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          if (-not (Test-Path $lang)) { $lang = "compiler:Default.isl" }
+          & $iscc "/DLangFile=$lang" setup.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup 失敗" }
+          Copy-Item out/TeacherPubAudit_Setup.exe "out/教師論文盤點工具_安裝程式.exe"
+          Remove-Item out/TeacherPubAudit_Setup.exe
+          Get-ChildItem out | Select-Object Name, @{n="MB";e={[math]::Round($_.Length/1MB,2)}}
+      - name: Windows Defender 掃描
+        shell: pwsh
+        run: |
+          $mp = "$env:ProgramFiles\Windows Defender\MpCmdRun.exe"
+          if (-not (Test-Path $mp)) { Write-Host "此編譯機沒有 Defender"; exit 0 }
+          & $mp -SignatureUpdate | Out-Host
+          & $mp -GetFiles 2>$null | Out-Null
+          Get-MpComputerStatus | Select-Object AntivirusSignatureVersion, AntivirusSignatureLastUpdated | Format-List | Out-Host
+          $bad = 0
+          foreach ($f in @("dist\TeacherPubAudit\TeacherPubAudit.exe", "out\教師論文盤點工具_安裝程式.exe")) {
+            $full = (Resolve-Path $f).Path
+            & $mp -Scan -ScanType 3 -File $full -DisableRemediation | Out-Host
+            Write-Host "$f => exit $LASTEXITCODE"
+            if ($LASTEXITCODE -eq 2) { $bad = 1 }
+          }
+          Get-MpThreatDetection | Format-List | Out-Host
+          if ($bad) { throw "Defender 偵測到威脅" }
       - uses: actions/upload-artifact@v4
         with:
           name: TeacherPubAudit-Windows
