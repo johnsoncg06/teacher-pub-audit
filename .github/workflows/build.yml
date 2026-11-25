@@ -5,6 +5,21 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# 縮小體積：不再整包收集 pywebview，只帶本平台需要的視窗元件與鑰匙圈後端，並排除用不到的標準庫
+env:
+  COMMON_EXCLUDES: >-
+    --exclude-module tkinter --exclude-module _tkinter --exclude-module unittest
+    --exclude-module pydoc_data --exclude-module test --exclude-module lib2to3
+    --exclude-module xmlrpc --exclude-module distutils --exclude-module setuptools
+    --exclude-module pip --exclude-module pkg_resources
+    --exclude-module webview.platforms.qt --exclude-module webview.platforms.gtk
+    --exclude-module webview.platforms.cef --exclude-module webview.platforms.android
+    --exclude-module PyQt5 --exclude-module PyQt6 --exclude-module PySide2 --exclude-module PySide6
+    --exclude-module qtpy --exclude-module gi --exclude-module cefpython3
+    --exclude-module keyring.backends.SecretService --exclude-module keyring.backends.kwallet
+    --exclude-module keyring.backends.libsecret --exclude-module secretstorage
+    --exclude-module jeepney --exclude-module dbus
+
 jobs:
   windows:
     name: Windows (.exe)
@@ -19,7 +34,30 @@ jobs:
       - name: 基本檢查
         run: python -c "import main; print(main.Api().info()); print(main.Api().key_status())"
       - name: 打包
-        run: pyinstaller --noconfirm --onefile --windowed --name TeacherPubAudit --icon icon.ico --add-data "app.html;." --collect-submodules keyring --collect-all webview main.py
+        shell: bash
+        run: >-
+          pyinstaller --noconfirm --onefile --windowed --name TeacherPubAudit --icon icon.ico
+          --add-data "app.html;."
+          --collect-data webview
+          --hidden-import webview.platforms.winforms --hidden-import webview.platforms.edgechromium
+          --hidden-import clr --hidden-import keyring.backends.Windows
+          --exclude-module webview.platforms.cocoa --exclude-module keyring.backends.macOS
+          $COMMON_EXCLUDES main.py
+      - name: 自我檢查（元件、鑰匙圈、HTTPS）
+        shell: pwsh
+        run: |
+          $p = Start-Process dist/TeacherPubAudit.exe -ArgumentList "--selftest","selftest.json" -Wait -PassThru
+          Get-Content selftest.json
+          if ($p.ExitCode -ne 0) { throw "自我檢查失敗" }
+      - name: 自我檢查（實際開啟視窗）
+        shell: pwsh
+        run: |
+          $p = Start-Process dist/TeacherPubAudit.exe -ArgumentList "--selftest-gui","gui.json" -Wait -PassThru
+          Get-Content gui.json
+          if ($p.ExitCode -ne 0) { throw "視窗自我檢查失敗" }
+      - name: 體積
+        shell: pwsh
+        run: Get-Item dist/TeacherPubAudit.exe | Select-Object Name, @{n="MB";e={[math]::Round($_.Length/1MB,2)}}
       - name: 重新命名
         shell: pwsh
         run: |
@@ -52,19 +90,46 @@ jobs:
       - name: 基本檢查
         run: python -c "import main; print(main.Api().info())"
       - name: 打包
-        run: pyinstaller --noconfirm --windowed --name TeacherPubAudit --icon icon.icns --osx-bundle-identifier tw.edu.cmu.teacherpubaudit --add-data "app.html:." --collect-submodules keyring --collect-all webview main.py
+        run: >-
+          pyinstaller --noconfirm --windowed --name TeacherPubAudit --icon icon.icns
+          --osx-bundle-identifier tw.edu.cmu.teacherpubaudit
+          --add-data "app.html:."
+          --collect-data webview
+          --hidden-import webview.platforms.cocoa --hidden-import keyring.backends.macOS
+          --exclude-module webview.platforms.winforms --exclude-module webview.platforms.edgechromium
+          --exclude-module webview.platforms.mshtml --exclude-module clr --exclude-module pythonnet
+          --exclude-module clr_loader --exclude-module keyring.backends.Windows
+          $COMMON_EXCLUDES main.py
+      - name: 移除 Windows 專用檔案
+        run: |
+          APP="dist/TeacherPubAudit.app"
+          find "$APP" \( -name "*.dll" -o -name "*.exe" -o -name "*.pdb" \) -print -delete
+          find "$APP" -type d -empty -delete || true
       - name: 設定顯示名稱
         run: |
           APP="dist/TeacherPubAudit.app"
           /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string 教師論文盤點工具" "$APP/Contents/Info.plist" || /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName 教師論文盤點工具" "$APP/Contents/Info.plist"
           /usr/libexec/PlistBuddy -c "Set :CFBundleName 教師論文盤點工具" "$APP/Contents/Info.plist" || true
           codesign --force --deep --sign - "$APP"
+      - name: 自我檢查（元件、HTTPS）
+        run: |
+          dist/TeacherPubAudit.app/Contents/MacOS/TeacherPubAudit --selftest "$PWD/selftest.json"; rc=$?
+          cat selftest.json; exit $rc
+      - name: 自我檢查（實際開啟視窗）
+        run: |
+          dist/TeacherPubAudit.app/Contents/MacOS/TeacherPubAudit --selftest-gui "$PWD/gui.json"; rc=$?
+          cat gui.json || true; exit $rc
+      - name: 體積
+        run: |
+          du -sh dist/TeacherPubAudit.app
+          find dist/TeacherPubAudit.app -type f -size +300k -exec du -k {} + | sort -rn | head -20
       - name: 製作 DMG
         run: |
           mkdir -p dmg out
           cp -R "dist/TeacherPubAudit.app" "dmg/教師論文盤點工具.app"
           ln -s /Applications dmg/Applications
-          hdiutil create -volname "教師論文盤點工具" -srcfolder dmg -ov -format UDZO "out/教師論文盤點工具_Mac_${{ matrix.arch }}.dmg"
+          hdiutil create -volname "教師論文盤點工具" -srcfolder dmg -ov -format ULMO "out/教師論文盤點工具_Mac_${{ matrix.arch }}.dmg"
+          ls -la out
       - uses: actions/upload-artifact@v4
         with:
           name: TeacherPubAudit-macOS-${{ matrix.arch }}

@@ -29,6 +29,16 @@ except Exception:  # pragma: no cover
 
 try:
     import keyring
+    # 直接指定作業系統內建的鑰匙圈，不靠自動偵測（打包時只需帶這一個後端，體積較小）
+    try:
+        if sys.platform == "win32":
+            from keyring.backends.Windows import WinVaultKeyring
+            keyring.set_keyring(WinVaultKeyring())
+        elif sys.platform == "darwin":
+            from keyring.backends.macOS import Keyring as MacKeyring
+            keyring.set_keyring(MacKeyring())
+    except Exception:
+        pass  # 退回 keyring 預設偵測
 except Exception:  # pragma: no cover
     keyring = None
 
@@ -204,5 +214,99 @@ def main():
     webview.start(private_mode=False, storage_path=data_dir())
 
 
+def selftest(out_path):
+    """編譯後自我檢查：確認刪減體積後，所有功能需要的元件都還在。結果寫成 JSON。"""
+    r = {}
+
+    def chk(name, fn):
+        try:
+            v = fn()
+            r[name] = {"ok": True, "detail": v}
+        except Exception as e:  # noqa: BLE001
+            r[name] = {"ok": False, "detail": f"{type(e).__name__}: {e}"}
+
+    def gui():
+        import webview  # noqa: F401
+        if sys.platform == "win32":
+            import webview.platforms.winforms  # noqa: F401
+            import webview.platforms.edgechromium  # noqa: F401
+            return "winforms+edgechromium"
+        if sys.platform == "darwin":
+            import webview.platforms.cocoa  # noqa: F401
+            return "cocoa"
+        return "skip"
+
+    def kr():
+        if not keyring:
+            raise RuntimeError("keyring 無法載入")
+        name = type(keyring.get_keyring()).__name__
+        if sys.platform == "win32":  # Windows 認證管理員可在 CI 實測寫入/讀取/刪除
+            keyring.set_password("cmu-selftest", "u", "x1")
+            assert keyring.get_password("cmu-selftest", "u") == "x1"
+            keyring.delete_password("cmu-selftest", "u")
+        return name
+
+    def net():
+        req = urllib.request.Request(API_ROOT + "/v1/documents?q=PY%3D2025&limit=1", headers={"X-ApiKey": "invalid"})
+        try:
+            urllib.request.urlopen(req, context=SSL_CTX, timeout=20)
+            return "200"
+        except urllib.error.HTTPError as e:  # 401 代表 HTTPS 與憑證都正常
+            return f"HTTP {e.code}"
+
+    def html():
+        p = Path(resource("app.html"))
+        return p.stat().st_size
+
+    chk("gui", gui)
+    chk("keyring", kr)
+    chk("https", net)
+    chk("app_html", html)
+    chk("save_dialog_const", lambda: __import__("webview").SAVE_DIALOG is not None)
+    Path(out_path).write_text(json.dumps(r, ensure_ascii=False, indent=1), encoding="utf-8")
+    return all(v["ok"] for v in r.values())
+
+
+def selftest_gui(out_path):
+    """實際開啟視窗、載入介面，確認網頁和 Python 之間的橋接可用，然後自動關閉。"""
+    import threading
+    import time
+    import webview
+    res = {}
+    done = {"v": False}
+
+    def finish():
+        if done["v"]:
+            return
+        done["v"] = True
+        Path(out_path).write_text(json.dumps(res or {"err": "timeout"}, ensure_ascii=False), encoding="utf-8")
+        try:
+            w.destroy()
+        except Exception:
+            pass
+
+    def on_loaded():
+        try:
+            time.sleep(2)
+            res["bridge"] = w.evaluate_js(
+                "typeof window.pywebview!=='undefined' && window.pywebview.api ? typeof window.pywebview.api.key_status : 'missing'")
+            res["title"] = w.evaluate_js("document.title")
+            res["steps"] = w.evaluate_js("document.querySelectorAll('[data-step], .step').length")
+        except Exception as e:  # noqa: BLE001
+            res["err"] = f"{type(e).__name__}: {e}"
+        finish()
+
+    w = webview.create_window("selftest", Path(resource("app.html")).as_uri(), js_api=Api(), width=1000, height=700)
+    w.events.loaded += on_loaded
+    threading.Timer(90, finish).start()
+    webview.start(private_mode=True)
+    finish()
+    return res.get("bridge") == "function"
+
+
 if __name__ == "__main__":
+    if len(sys.argv) >= 3 and sys.argv[1] == "--selftest-gui":
+        sys.exit(0 if selftest_gui(sys.argv[2]) else 1)
+    if len(sys.argv) >= 3 and sys.argv[1] == "--selftest":
+        sys.exit(0 if selftest(sys.argv[2]) else 1)
     main()
