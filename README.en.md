@@ -14,14 +14,24 @@ A desktop app for auditing faculty members' annual publications in Web of Scienc
 - Exports per-faculty summaries, per-paper lists and journal tables as CSV, and prints an A4 landscape report to PDF
 - All data stays on the user's computer; projects can be saved as .json files and opened on Mac or Windows
 
-## Download
-Every push to `main` triggers a GitHub Actions build:
+## Download the latest version
+
+| Computer | Download |
+|---|---|
+| Windows 10/11 | [**Windows installer**](https://github.com/johnsoncg06/teacher-pub-audit/releases/latest/download/TeacherPubAudit_Windows_Setup.exe) |
+| Mac (Apple silicon, M1 or later) | [**Mac (Apple silicon) .dmg**](https://github.com/johnsoncg06/teacher-pub-audit/releases/latest/download/TeacherPubAudit_Mac_AppleSilicon.dmg) |
+| Mac (Intel) | [**Mac (Intel) .dmg**](https://github.com/johnsoncg06/teacher-pub-audit/releases/latest/download/TeacherPubAudit_Mac_Intel.dmg) |
+
+Not sure which Mac you have? Apple menu → "About This Mac": choose Apple silicon if "Chip" starts with Apple M, or Intel if "Processor" says Intel. All versions and change history are on the [Releases](https://github.com/johnsoncg06/teacher-pub-audit/releases) page.
+
+## Building from source (developers)
+Every push of app-related files to `main` triggers a GitHub Actions build and publishes it to Releases:
 - `TeacherPubAudit-Windows`: Windows installer (教師論文盤點工具_安裝程式.exe)
 - `TeacherPubAudit-macOS-AppleSilicon`: .dmg for Macs with Apple silicon (M series)
 - `TeacherPubAudit-macOS-Intel`: .dmg for Intel Macs
 - Note: you may need to enable Developer Mode or force the installation.
 
-Go to the repo's **Actions** tab → the latest "編譯桌面版" (desktop build) run → **Artifacts** at the bottom of the page.
+Each build's files are also available under **Actions** → that "編譯桌面版" (desktop build) run → **Artifacts**.
 
 Each build runs automated self-tests on the packaged app (window components, keychain access, HTTPS connection, and opening the interface), and the Windows build is scanned with Microsoft Defender. A build that fails any check produces no installer.
 

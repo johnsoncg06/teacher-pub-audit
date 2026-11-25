@@ -6,14 +6,24 @@ Web of Science 年度論文與期刊品質盤點工具的桌面版。介面與�
 
 **製作**：中國醫藥大學 醫資三甲 江桂宏、醫學二乙 葉睿穎
 
-## 下載
-推送到 `main` 後，GitHub Actions 會自動編譯：
+## 下載最新版本
+
+| 電腦 | 下載 |
+|---|---|
+| Windows 10／11 | [**Windows 安裝程式**](https://github.com/johnsoncg06/teacher-pub-audit/releases/latest/download/TeacherPubAudit_Windows_Setup.exe) |
+| Mac（Apple 晶片，M1 以後） | [**Mac（Apple 晶片）.dmg**](https://github.com/johnsoncg06/teacher-pub-audit/releases/latest/download/TeacherPubAudit_Mac_AppleSilicon.dmg) |
+| Mac（Intel 處理器） | [**Mac（Intel）.dmg**](https://github.com/johnsoncg06/teacher-pub-audit/releases/latest/download/TeacherPubAudit_Mac_Intel.dmg) |
+
+不確定 Mac 的晶片：蘋果選單 →「關於這台 Mac」，「晶片」為 Apple M 開頭選 Apple 晶片版，「處理器」為 Intel 選 Intel 版。所有版本與更新紀錄見 [Releases](https://github.com/johnsoncg06/teacher-pub-audit/releases)。
+
+## 自行編譯（開發者）
+推送程式相關檔案到 `main` 後，GitHub Actions 會自動編譯，並發布到 Releases：
 - `TeacherPubAudit-Windows`：Windows 安裝程式（教師論文盤點工具_安裝程式.exe）
 - `TeacherPubAudit-macOS-AppleSilicon`：M 系列晶片 Mac 用 .dmg
 - `TeacherPubAudit-macOS-Intel`：Intel Mac 用 .dmg
 - 注意：記得打開開發者模式或者是強制安裝
 
-到 repo 的 **Actions** → 最新一次「編譯桌面版」→ 頁面下方 **Artifacts** 下載。
+每次編譯的檔案也可在 **Actions** → 該次「編譯桌面版」→ **Artifacts** 下載。
 
 ## 第一次開啟（未簽章程式）
 - **Windows**：出現「Windows 已保護您的電腦」時，按「其他資訊」→「仍要執行」。安裝不需要系統管理員權限。若 Windows 安全性仍攔截：Windows 安全性 → 病毒與威脅防護 → 保護歷程記錄 → 點選該項目 →「允許」。

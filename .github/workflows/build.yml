@@ -3,6 +3,15 @@ name: 編譯桌面版
 on:
   push:
     branches: [main]
+    # 只有程式相關檔案變更才重新編譯與發布（改 README 不會）
+    paths:
+      - "app.html"
+      - "main.py"
+      - "requirements.txt"
+      - "setup.iss"
+      - "version_info.txt"
+      - "icon.*"
+      - ".github/workflows/**"
   workflow_dispatch:
 
 # 縮小體積：不再整包收集 pywebview，只帶本平台需要的視窗元件與鑰匙圈後端，並排除用不到的標準庫
@@ -174,3 +183,46 @@ jobs:
         with:
           name: TeacherPubAudit-macOS-${{ matrix.arch }}
           path: out/*.dmg
+
+  release:
+    name: 發布最新版本
+    needs: [windows, macos]
+    if: ${{ always() && needs.windows.result == 'success' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: art
+      - name: 整理檔名
+        run: |
+          mkdir -p rel
+          find art -type f
+          cp art/TeacherPubAudit-Windows/*.exe rel/TeacherPubAudit_Windows_Setup.exe
+          f=$(ls art/TeacherPubAudit-macOS-AppleSilicon/*.dmg 2>/dev/null | head -1); [ -n "$f" ] && cp "$f" rel/TeacherPubAudit_Mac_AppleSilicon.dmg
+          f=$(ls art/TeacherPubAudit-macOS-Intel/*.dmg 2>/dev/null | head -1); [ -n "$f" ] && cp "$f" rel/TeacherPubAudit_Mac_Intel.dmg
+          (cd rel && sha256sum * > SHA256SUMS.txt)
+          ls -la rel
+      - name: 建立 Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          TAG="v1.0.${{ github.run_number }}"
+          cat > notes.md <<'NOTES'
+          ## 下載 Download
+          | 電腦 Computer | 檔案 File |
+          |---|---|
+          | Windows 10／11 | `TeacherPubAudit_Windows_Setup.exe` |
+          | Mac（Apple 晶片 Apple silicon, M1+） | `TeacherPubAudit_Mac_AppleSilicon.dmg` |
+          | Mac（Intel） | `TeacherPubAudit_Mac_Intel.dmg` |
+
+          **第一次開啟**：Windows 出現「Windows 已保護您的電腦」→「其他資訊」→「仍要執行」；Mac 在 App 上按右鍵 →「打開」。
+          **First launch**: Windows: "More info" → "Run anyway". Mac: right-click the app → "Open".
+
+          本版本已通過自動自我檢查與 Microsoft Defender 掃描。This build passed automated self-tests and a Microsoft Defender scan.
+          NOTES
+          sed -i 's/^          //' notes.md
+          gh release create "$TAG" rel/* --target "${{ github.sha }}" --title "教師論文盤點工具 $TAG" --notes-file notes.md --latest
+
