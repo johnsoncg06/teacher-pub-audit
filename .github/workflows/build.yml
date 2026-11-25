@@ -1,0 +1,71 @@
+name: 編譯桌面版
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  windows:
+    name: Windows (.exe)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 安裝套件
+        run: pip install -r requirements.txt
+      - name: 基本檢查
+        run: python -c "import main; print(main.Api().info()); print(main.Api().key_status())"
+      - name: 打包
+        run: pyinstaller --noconfirm --onefile --windowed --name TeacherPubAudit --icon icon.ico --add-data "app.html;." --collect-submodules keyring --collect-all webview main.py
+      - name: 重新命名
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force out | Out-Null
+          Copy-Item dist/TeacherPubAudit.exe "out/教師論文盤點工具.exe"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TeacherPubAudit-Windows
+          path: out/*.exe
+
+  macos:
+    name: macOS (.dmg) ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            arch: AppleSilicon
+          - os: macos-15-intel
+            arch: Intel
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.arch == 'Intel' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 安裝套件
+        run: pip install -r requirements.txt
+      - name: 基本檢查
+        run: python -c "import main; print(main.Api().info())"
+      - name: 打包
+        run: pyinstaller --noconfirm --windowed --name TeacherPubAudit --icon icon.icns --osx-bundle-identifier tw.edu.cmu.teacherpubaudit --add-data "app.html:." --collect-submodules keyring --collect-all webview main.py
+      - name: 設定顯示名稱
+        run: |
+          APP="dist/TeacherPubAudit.app"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string 教師論文盤點工具" "$APP/Contents/Info.plist" || /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName 教師論文盤點工具" "$APP/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleName 教師論文盤點工具" "$APP/Contents/Info.plist" || true
+          codesign --force --deep --sign - "$APP"
+      - name: 製作 DMG
+        run: |
+          mkdir -p dmg out
+          cp -R "dist/TeacherPubAudit.app" "dmg/教師論文盤點工具.app"
+          ln -s /Applications dmg/Applications
+          hdiutil create -volname "教師論文盤點工具" -srcfolder dmg -ov -format UDZO "out/教師論文盤點工具_Mac_${{ matrix.arch }}.dmg"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TeacherPubAudit-macOS-${{ matrix.arch }}
+          path: out/*.dmg
