@@ -9,7 +9,7 @@ Web of Science 年度論文與期刊品質盤點工具的桌面版。介面與�
 - `TeacherPubAudit-Windows`：教師論文盤點工具.exe
 - `TeacherPubAudit-macOS-AppleSilicon`：M 系列晶片 Mac 用 .dmg
 - `TeacherPubAudit-macOS-Intel`：Intel Mac 用 .dmg
-- ##注意：記得打開開發者模式或者是強制安裝
+- 注意：記得打開開發者模式或者是強制安裝
 
 到 repo 的 **Actions** → 最新一次「編譯桌面版」→ 頁面下方 **Artifacts** 下載。
 
