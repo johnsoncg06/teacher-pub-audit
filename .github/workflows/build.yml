@@ -74,6 +74,7 @@ jobs:
           $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
           if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
           if (-not (Test-Path $lang)) { $lang = "compiler:Default.isl" }
+          Write-Host "語言檔：$lang"
           & $iscc "/DLangFile=$lang" setup.iss
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup 失敗" }
           Copy-Item out/TeacherPubAudit_Setup.exe "out/教師論文盤點工具_安裝程式.exe"
