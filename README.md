@@ -2,7 +2,7 @@
 
 Web of Science 年度論文與期刊品質盤點工具的桌面版。介面與網頁版相同，另外可在 App 內輸入 Web of Science Starter API Key，直接取得資料，不需使用終端機。
 
-**製作**：醫資三甲 江桂宏、醫學二乙 葉睿穎
+**製作**：中國醫藥大學 醫資三甲 江桂宏、醫學二乙 葉睿穎
 
 ## 下載
 推送到 `main` 後，GitHub Actions 會自動編譯：
