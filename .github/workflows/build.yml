@@ -67,13 +67,15 @@ jobs:
       - name: 製作安裝程式
         shell: pwsh
         run: |
-          $lang = "$PWD\ChineseTraditional.isl"
-          try { Invoke-WebRequest "https://raw.githubusercontent.com/jrsoftware/issrc/main/Files/Languages/Unofficial/ChineseTraditional.isl" -OutFile $lang } catch { }
-          if (-not (Test-Path $lang)) { choco install innosetup -y --no-progress | Out-Null }
-          if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) { choco install innosetup -y --no-progress | Out-Null }
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue) -and -not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress | Out-Null }
           $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
           if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
-          if (-not (Test-Path $lang)) { $lang = "compiler:Default.isl" }
+          $isdir = Split-Path $iscc
+          if (Test-Path "$isdir\Languages\ChineseTraditional.isl") { $lang = "compiler:Languages\ChineseTraditional.isl" }
+          else {
+            $lang = "$PWD\ChineseTraditional.isl"
+            try { Invoke-WebRequest "https://raw.githubusercontent.com/jrsoftware/issrc/main/Files/Languages/ChineseTraditional.isl" -OutFile $lang } catch { $lang = "compiler:Default.isl" }
+          }
           Write-Host "語言檔：$lang"
           & $iscc "/DLangFile=$lang" setup.iss
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup 失敗" }
