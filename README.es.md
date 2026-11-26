@@ -4,6 +4,8 @@
 
 Una aplicación de escritorio para revisar las publicaciones anuales del profesorado en Web of Science y la calidad de las revistas en las que publica. La interfaz es la misma que la de la versión web. Además, cada usuario puede introducir su propia clave de la API Starter de Web of Science dentro de la aplicación y obtener los datos directamente, sin usar la terminal.
 
+**Idioma de la interfaz**: con el selector de la esquina inferior izquierda se puede cambiar entre 繁體中文, English, 日本語, 한국어 y Español (por defecto, chino tradicional; la elección se recuerda). La ayuda y preguntas frecuentes y los documentos de instrucciones para IA siguen en chino tradicional; los datos del usuario, como nombres y departamentos, no se traducen.
+
 **Autores**: Chiang Kuei-Hung (Informática Médica, 3.er curso, grupo A) y Yeh Jui-Ying (Medicina, 2.º curso, grupo B), Universidad Médica de China (China Medical University), Taiwán
 
 ## Características

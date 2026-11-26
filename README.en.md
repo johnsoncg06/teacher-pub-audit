@@ -4,6 +4,8 @@
 
 A desktop app for auditing faculty members' annual publications in Web of Science and the quality of the journals they publish in. The interface is the same as the web version. In addition, users can enter their own Web of Science Starter API key inside the app and retrieve data directly, without using a terminal.
 
+**Interface language**: use the selector at the bottom left of the app to switch between 繁體中文, English, 日本語, 한국어 and Español (default: Traditional Chinese; your choice is remembered). The Help/FAQ and the AI prompt documents remain in Traditional Chinese; user data such as names and departments is never translated.
+
 **Authors**: Chiang Kuei-Hung (Medical Informatics, Year 3, Class A) and Yeh Jui-Ying (Medicine, Year 2, Class B), China Medical University, Taiwan
 
 ## Features
