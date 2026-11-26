@@ -1,6 +1,6 @@
 # 教師論文盤點工具（桌面版）
 
-**繁體中文** | [English](README.en.md)
+**繁體中文** | [English](README.en.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Español](README.es.md)
 
 Web of Science 年度論文與期刊品質盤點工具的桌面版。介面與網頁版相同，另外可在 App 內輸入 Web of Science Starter API Key，直接取得資料，不需使用終端機。
 

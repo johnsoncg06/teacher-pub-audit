@@ -1,6 +1,6 @@
 # Faculty Publication Audit Tool (Desktop)
 
-[繁體中文](README.md) | **English**
+[繁體中文](README.md) | **English** | [日本語](README.ja.md) | [한국어](README.ko.md) | [Español](README.es.md)
 
 A desktop app for auditing faculty members' annual publications in Web of Science and the quality of the journals they publish in. The interface is the same as the web version. In addition, users can enter their own Web of Science Starter API key inside the app and retrieve data directly, without using a terminal.
 
