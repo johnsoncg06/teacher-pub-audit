@@ -1,7 +1,8 @@
 // 測試共用：載入 playwright（CI 用 npm 套件；本機沙箱有全域安裝時退而求其次）
 const path = require('path');
-let pw; try { pw = require('playwright'); } catch (e) { pw = require('/opt/node22/lib/node_modules/playwright'); }
-exports.chromium = pw.chromium;
+// 延遲載入：單元測試不需要 playwright
+let pw; const load = () => pw || (pw = (() => { try { return require('playwright'); } catch (e) { return require('/opt/node22/lib/node_modules/playwright'); } })());
+Object.defineProperty(exports, 'chromium', { get: () => load().chromium });
 exports.APP = path.resolve(__dirname, '..', 'app.html');
 exports.url = () => 'file://' + exports.APP;
 let fails = 0;
