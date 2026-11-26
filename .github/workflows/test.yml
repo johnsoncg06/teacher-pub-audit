@@ -1,0 +1,40 @@
+name: 測試與檢查
+
+on:
+  push:
+    branches: [main]
+    paths: ["src/**", "tests/**", "tools/**", "app.html", ".github/workflows/test.yml"]
+  pull_request:
+    paths: ["src/**", "tests/**", "tools/**", "app.html", ".github/workflows/test.yml"]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: 建置一致性、核心邏輯、端對端、翻譯覆蓋
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: 由 src/ 重新建置 app.html，並確認與已提交的相同
+        run: |
+          python3 src/build.py
+          git diff --exit-code app.html || { echo "::error::app.html 與 src/ 不一致。請在本機執行 python3 src/build.py 後一併提交。"; exit 1; }
+      - name: 詞典靜態檢查
+        run: python3 tests/check_dict.py
+      - name: 核心邏輯單元測試
+        run: node tests/test_core.js
+      - name: 安裝 Playwright
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: 端對端（範例資料）
+        run: node tests/e2e_sample.js
+      - name: 端對端（API 中斷續抓）
+        run: node tests/e2e_api_resume.js
+      - name: 翻譯覆蓋
+        run: node tests/i18n_coverage.js

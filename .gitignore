@@ -4,3 +4,6 @@ dist/
 out/
 dmg/
 *.spec
+src/i18n_data.js
+node_modules/
+__pycache__/

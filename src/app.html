@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>教師論文盤點工具</title>
+<style>
+:root{
+  --bg:#f5f5f7; --surface:#ffffff; --surface2:#fafafa; --fill:rgba(0,0,0,.06); --fill2:rgba(0,0,0,.035); --hover:rgba(0,0,0,.045);
+  --label:#1d1d1f; --label2:#6e6e73; --label3:#86868b; --sep:rgba(0,0,0,.1); --sep2:rgba(0,0,0,.06);
+  --accent:#0066cc; --accentFill:#0071e3; --accentHover:#0062c4; --accentTint:rgba(0,113,227,.08);
+  --green:#1e7e34; --orange:#a35200; --red:#c41e1e; --indigo:#4b4ba8;
+  --sidebar:#f0f0f2; --sel:rgba(0,0,0,.075); --shadow:0 0 0 1px rgba(0,0,0,.05),0 1px 2px rgba(0,0,0,.04);
+  --r-lg:12px; --r-md:10px; --r-sm:7px;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#1e1e1e; --surface:#2a2a2c; --surface2:#262628; --fill:rgba(255,255,255,.09); --fill2:rgba(255,255,255,.05); --hover:rgba(255,255,255,.06);
+  --label:#f5f5f7; --label2:#a1a1a6; --label3:#8e8e93; --sep:rgba(255,255,255,.12); --sep2:rgba(255,255,255,.07);
+  --accent:#4ba3ff; --accentFill:#0a64d0; --accentHover:#1a72dc; --accentTint:rgba(75,163,255,.12);
+  --green:#4cc76d; --orange:#f0a040; --red:#ff6b61; --indigo:#9a98ff;
+  --sidebar:#252527; --sel:rgba(255,255,255,.1); --shadow:0 0 0 1px rgba(255,255,255,.06);
+}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font:14px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI","PingFang TC","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--label);-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--accentFill);outline-offset:2px}
+.app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}
+
+aside{position:sticky;top:0;height:100vh;overflow:auto;padding:22px 12px 16px;background:var(--sidebar);border-right:1px solid var(--sep);display:flex;flex-direction:column}
+.brand{padding:0 10px 16px}
+.brand b{display:block;font-size:14px;font-weight:600} .brand span{font-size:12px;color:var(--label2)}
+.sidehead{font-size:11px;font-weight:600;color:var(--label3);padding:6px 10px 4px;letter-spacing:.02em}
+.steps{display:grid;gap:1px}
+.step{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:6px;cursor:pointer;color:var(--label);font-size:13.5px;border:0;background:none;text-align:left;width:100%;font-family:inherit;min-height:30px}
+.step:hover{background:var(--hover)}
+.step.on{background:var(--sel);font-weight:600}
+.step .dot{flex:0 0 18px;font-size:12px;color:var(--label3);font-variant-numeric:tabular-nums;text-align:center}
+.step.done .dot{color:var(--green);font-weight:700}
+.progress{padding:12px 10px 0} .progress .bar{height:4px;border-radius:2px;background:var(--fill);overflow:hidden}
+.progress .bar i{display:block;height:100%;background:var(--label3);transition:width .3s ease}
+.progress small{display:block;margin-top:5px;font-size:11.5px;color:var(--label3)}
+.side-foot{margin-top:auto;padding:14px 4px 0;display:grid;gap:6px;border-top:1px solid var(--sep2)}
+.side-foot .langpick{display:block;margin-bottom:2px}.side-foot .langpick select{width:100%}.disc{display:none;font-size:11.5px;line-height:1.5;color:var(--label2);padding:6px 8px;border:1px solid var(--sep2);border-radius:var(--r-sm);background:var(--fill)}html:not([data-lang="zh-TW"]) .disc{display:block}tr.rvf>td{background:var(--accentTint)}tr.rvf>td:first-child{box-shadow:inset 3px 0 0 var(--accentFill)}.kbd{display:inline-block;font:11px ui-monospace,Menlo,monospace;border:1px solid var(--sep);border-radius:4px;padding:0 5px;background:var(--surface)}.conds{width:100%;border-collapse:collapse;font-size:13px}.conds th{width:150px;text-align:left;vertical-align:top;color:var(--label2);font-weight:500;padding:6px 10px 6px 0}.conds td{padding:6px 0;border-bottom:1px solid var(--sep2)}.conds tr:last-child td{border-bottom:0}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.side-foot .saved{font-size:11.5px;color:var(--label3);padding:4px 6px 0}
+.side-foot .credit{font-size:11px;color:var(--label3);padding:2px 6px 0;line-height:1.5}.side-foot .credit span{white-space:nowrap}
+.side-foot{grid-template-columns:minmax(0,1fr)}.side-foot .btn{min-width:0;white-space:normal;text-align:left;line-height:1.25;justify-content:space-between;padding-top:6px;padding-bottom:6px}.side-foot .btn kbd{flex:none}
+html:not([data-lang="zh-TW"]) .side-foot .credit span{white-space:normal}
+.help .hfoot{font-size:12px;color:var(--label3);text-align:center;padding:18px 0 4px;border-top:1px solid var(--sep2);margin-top:18px}
+
+main{padding:36px clamp(24px,4vw,56px) 110px;max-width:1060px;width:100%}
+.eyebrow{font-size:12px;font-weight:500;color:var(--label3);margin:0 0 4px}
+h1{font-size:24px;line-height:1.25;letter-spacing:-.01em;margin:0 0 6px;font-weight:600}
+.lede{font-size:14px;color:var(--label2);margin:0 0 22px;max-width:720px}
+h2{font-size:15px;margin:0 0 2px;font-weight:600}
+.sub{color:var(--label2);font-size:13px;margin:0 0 14px}
+.group{background:var(--surface);border-radius:var(--r-lg);padding:18px 20px;margin:0 0 16px;box-shadow:var(--shadow)}
+.group.flush{padding:0;overflow:hidden}
+.group.flush .ghead{padding:16px 20px 6px}
+.hero-action{display:flex;gap:16px;align-items:center}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.muted{color:var(--label2)} .small{font-size:12.5px;color:var(--label2)}
+
+.field{display:block} .field>span{display:block;font-size:12.5px;color:var(--label2);margin:0 0 5px}
+input[type=text],input[type=number],input[type=password],input[type=search],select,textarea{font:inherit;color:var(--label);background:var(--surface);border:1px solid var(--sep);border-radius:var(--r-sm);padding:6px 10px;width:100%;min-height:30px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accentFill);box-shadow:0 0 0 3px var(--accentTint)}
+textarea{min-height:110px;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:12px;resize:vertical}
+.checks{display:flex;flex-wrap:wrap;gap:6px 18px}
+.checks label{display:flex;gap:6px;align-items:center;font-size:13.5px;cursor:pointer}
+input[type=checkbox]{accent-color:var(--accentFill);width:15px;height:15px;margin:0}
+.switch{appearance:none;-webkit-appearance:none;width:32px;height:19px;border-radius:99px;background:var(--fill);position:relative;cursor:pointer;transition:background .15s;margin:0;vertical-align:middle;box-shadow:inset 0 0 0 1px var(--sep2)}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .15s}
+.switch:checked{background:var(--accentFill)} .switch:checked::after{transform:translateX(13px)} .switch:disabled{opacity:.4;cursor:not-allowed}
+
+.btn{font:inherit;font-size:13.5px;display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:var(--r-sm);border:1px solid var(--sep);cursor:pointer;background:var(--surface);color:var(--label);white-space:nowrap;min-height:30px;box-shadow:0 1px 1px rgba(0,0,0,.03)}
+.btn:hover{background:var(--surface2);border-color:rgba(0,0,0,.18)}
+.btn:active{background:var(--fill)}
+.btn.primary{background:var(--accentFill);border-color:var(--accentFill);color:#fff}
+.btn.primary:hover{background:var(--accentHover)}
+.btn.plain{background:none;border-color:transparent;box-shadow:none;color:var(--accent);padding:4px 6px}
+.btn.plain:hover{text-decoration:underline}
+.btn.lg{padding:7px 20px;min-height:34px;font-size:14px}
+.btn.sm{font-size:12.5px;padding:3px 10px;min-height:26px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn svg{width:14px;height:14px}
+
+details.more{margin-top:14px;border-top:1px solid var(--sep2);padding-top:10px}
+details.more>summary{list-style:none;cursor:pointer;color:var(--label);font-weight:500;font-size:13.5px;display:flex;align-items:center;gap:6px}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"";width:6px;height:6px;border-right:1.5px solid var(--label2);border-bottom:1.5px solid var(--label2);transform:rotate(-45deg);transition:transform .15s;margin:0 4px 0 2px}
+details.more[open]>summary::before{transform:rotate(45deg)}
+details.more .inner{padding-top:12px;display:grid;gap:12px}
+.option{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--sep2);border-radius:var(--r-md);padding:14px 16px}
+.option .num{flex:0 0 20px;font-size:13px;color:var(--label3);font-weight:600}
+.option h3{margin:0 0 3px;font-size:13.5px}
+.option p{margin:0 0 10px;font-size:12.5px;color:var(--label2)}
+
+.drop{border:1px dashed rgba(0,0,0,.22);border-radius:var(--r-md);padding:26px 20px;text-align:center;background:var(--surface2)}
+@media (prefers-color-scheme:dark){.drop{border-color:rgba(255,255,255,.22)}}
+.drop .ico{color:var(--label3);margin-bottom:6px}
+.drop b{display:block;font-size:14px;font-weight:600;margin-bottom:2px}
+.drop .small{margin:0 0 12px}
+body.dragging .drop{border-color:var(--accentFill);background:var(--accentTint)}
+
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;white-space:nowrap;color:var(--label)}
+.st::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;flex:0 0 7px}
+.st.g::before{background:var(--green)} .st.o::before{background:var(--orange)} .st.r::before{background:var(--red)} .st.i::before{background:var(--indigo)} .st.n::before{background:var(--label3)}
+.note{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-radius:var(--r-md);margin:0 0 14px;font-size:13px;border:1px solid var(--sep2);background:var(--surface)}
+.note::before{content:"";flex:0 0 3px;align-self:stretch;border-radius:2px;background:var(--label3)}
+.note.ok::before{background:var(--green)} .note.warn::before{background:var(--orange)} .note.info::before{background:var(--accentFill)} .note.err::before{background:var(--red)}
+.note>div{flex:1}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;margin:0 0 16px;background:var(--sep2);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow)}
+.stat{background:var(--surface);padding:14px 18px}
+.stat b{display:block;font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:12px;color:var(--label2)}
+.stat .small{margin-top:4px}
+
+.list{max-height:520px;overflow:auto}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}
+th{position:sticky;top:0;z-index:1;background:var(--surface);text-align:left;font-size:11.5px;font-weight:600;color:var(--label2);padding:8px 12px;border-bottom:1px solid var(--sep);white-space:nowrap}
+td{padding:8px 12px;border-bottom:1px solid var(--sep2);vertical-align:top}
+tbody tr:nth-child(even) td{background:var(--surface2)}
+tr:last-child td{border-bottom:0}
+td input[type=text]{min-height:26px;padding:3px 8px}
+.sum td{white-space:nowrap}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.q{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:11.5px;color:var(--label2);background:var(--fill2);padding:8px 10px;border-radius:6px;max-height:62px;overflow:hidden;word-break:break-all}
+.qrow{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--sep2)} .qrow:last-child{border:0}
+.qrow .meta{flex:0 0 100px}
+
+.seg{display:inline-flex;background:var(--fill);border-radius:7px;padding:2px;gap:0;flex-wrap:wrap}
+.seg button{font:inherit;font-size:12.5px;border:0;background:none;color:var(--label);padding:3px 12px;border-radius:5px;cursor:pointer;min-height:24px}
+.seg button.on{background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.15),0 0 0 .5px rgba(0,0,0,.05)}
+.decide{display:inline-flex;background:var(--fill);border-radius:7px;padding:2px;white-space:nowrap}
+.decide button{white-space:nowrap;font:inherit;font-size:12.5px;border:0;background:none;padding:3px 10px;border-radius:5px;cursor:pointer;color:var(--label);min-height:24px}
+.decide button.on{background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.15);font-weight:600}
+.decide button.yes.on{color:var(--green)} .decide button.no.on{color:var(--red)}
+
+.actionbar{position:fixed;left:248px;right:0;bottom:0;padding:12px clamp(24px,4vw,56px);background:var(--bg);border-top:1px solid var(--sep);display:flex;justify-content:space-between;align-items:center;z-index:5;gap:12px}
+.actionbar .hint{font-size:12.5px;color:var(--label2)}
+.actionbar .status{font-size:12.5px;color:var(--label2);transition:opacity .3s}
+kbd{font:11px -apple-system,sans-serif;color:var(--label3);border:1px solid var(--sep);border-radius:4px;padding:0 4px;margin-left:6px}
+.btn.primary kbd{color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.4)}
+dialog.help{border:0;padding:0;border-radius:14px;width:min(760px,92vw);height:min(80vh,820px);background:var(--surface);color:var(--label);box-shadow:0 20px 60px rgba(0,0,0,.25),0 0 0 1px var(--sep)}
+dialog.help::backdrop{background:rgba(0,0,0,.25)}
+.help .hbar{display:flex;gap:10px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--sep)}
+.help .hbar input{flex:1;min-height:32px;padding-left:32px;background:var(--fill2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2.5' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E") no-repeat 10px center;border-color:transparent}
+.help .hbody{overflow:auto;height:calc(100% - 62px);padding:6px 20px 24px}
+.help h4{font-size:11.5px;font-weight:600;color:var(--label3);margin:18px 0 6px}
+.help details{border-bottom:1px solid var(--sep2)}
+.help summary{cursor:pointer;padding:9px 0;font-size:13.5px;font-weight:500;list-style:none;display:flex;gap:8px}
+.help summary::-webkit-details-marker{display:none}
+.help summary::before{content:"";width:6px;height:6px;margin-top:7px;border-right:1.5px solid var(--label3);border-bottom:1.5px solid var(--label3);transform:rotate(-45deg);transition:transform .15s;flex:0 0 6px}
+.help details[open] summary::before{transform:rotate(45deg)}
+.help .hc{font-size:13px;color:var(--label);padding:0 0 12px 14px;line-height:1.65}
+.help .hc p,.help .hc ul,.help .hc ol{margin:0 0 8px} .help .hc ul,.help .hc ol{padding-left:20px}
+.help .cat{font-size:11px;color:var(--label3);font-weight:400;margin-left:auto;white-space:nowrap}
+.help mark{background:rgba(255,204,0,.45);color:inherit;border-radius:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:860px){.app{grid-template-columns:1fr}aside{position:static;height:auto}.actionbar{left:0}.side-foot{display:none}}
+@page{size:A4 landscape;margin:12mm}
+@media print{.eyebrow{display:none}.sum{font-size:10.5px}.sum th,.sum td{padding:4px 6px}.stat b{font-size:18px}h1{font-size:20px}aside,.actionbar,.btn,.noprint,details.more{display:none!important}.app{display:block}main{padding:0;max-width:none}.list{max-height:none;overflow:visible}.group,.stats{box-shadow:none;border:1px solid #ccc}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+  <div class="brand"><b>教師論文盤點</b><span>Web of Science · 期刊品質</span></div>
+  <div class="sidehead">流程</div>
+  <nav class="steps" id="steps" aria-label="流程步驟"></nav>
+  <div class="progress"><div class="bar"><i id="pbar"></i></div><small id="ptext"></small></div>
+  <div class="side-foot">
+    <button class="btn" id="btnSave">儲存專案檔…<kbd id="kS">⌘S</kbd></button>
+    <button class="btn" id="btnLoad">開啟專案檔…<kbd id="kO">⌘O</kbd></button>
+    <button class="btn" id="btnHelp">說明與常見問題<kbd id="kH">⌘?</kbd></button>
+    <button class="btn plain" id="btnReset" style="justify-self:start;color:var(--red)">清除所有資料…</button>
+    <label class="langpick"><span class="sr">Language / 語言</span><select id="langSel" aria-label="Language / 語言"></select></label>
+    <div class="disc" id="discSide">譯文由 AI 協助翻譯，未經母語人士審閱，僅供參考；與繁體中文原文有出入時，以繁體中文為準。</div>
+    <div class="saved" id="saveState">尚未儲存</div>
+    <div class="credit">製作：<span>醫資三甲 江桂宏</span>、<span>醫學二乙 葉睿穎</span></div>
+  </div>
+</aside>
+<main id="main"></main>
+</div>
+<div class="actionbar noprint" id="actionbar"></div>
+<input type="file" id="filePick" hidden multiple>
+<dialog class="help" id="help" aria-label="說明與常見問題"><div class="hbar"><input type="search" id="hq" placeholder="搜尋說明與常見問題，例如：筆數不符、專案檔、JIF" autocomplete="off"><button class="btn" id="hclose">完成</button></div><div class="hbody" id="hbody"></div></dialog>
+
+<!--CORE-->
+<!--JCR-->
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const STEPS = ['盤點範圍', '教師名單', '英文姓名', 'WoS 資料', '比對結果', '期刊品質', '人工審核', '報表'];
+const AFF_PRESETS = { '中國醫藥大學': 'China Med(?:ical)? Univ|Chinese Med Univ|China Med Coll' };
+const blank = () => ({ v: 2, step: 0, cfg: { org: '中國醫藥大學', college: '醫學院', year: new Date().getFullYear() - 1, docTypes: ['Article', 'Review'], aff: AFF_PRESETS['中國醫藥大學'], groupSize: 40, mode: 'web', apiOrg: 'China Medical University Taiwan', apiEdition: 'WOS+SCI,WOS+SSCI' },
+  teachers: [], files: [], jcrExtra: {}, jcrExtraInfo: '', decisions: {}, savedAt: null });
+let S = blank();
+let ROWS = [], REC = [];
+let reviewFilter = { tid: '', mode: 'todo' }, rvIdx = 0;
+function reviewList() { const f = reviewFilter; let L = ROWS.filter(r => !f.tid || r.tid === f.tid);
+  if (f.mode === 'todo') L = L.filter(r => (r.tier === 1 || r.tier === 3) && !S.decisions[r.id]);
+  else if (f.mode === 'suspect') L = L.filter(r => r.tier === 1 || r.tier === 3);
+  else if (f.mode === 'other') L = L.filter(r => r.tier === 2);
+  else if (f.mode === 'decided') L = L.filter(r => S.decisions[r.id]);
+  return L; }
+function decide(id, v) { if (v) S.decisions[id] = v; else delete S.decisions[id]; save(); const y = window.scrollY, ls = document.querySelector('.list')?.scrollTop; render(); window.scrollTo(0, y); const l = document.querySelector('.list'); if (l && ls != null) l.scrollTop = ls; const f = document.querySelector('tr.rvf'); if (f) f.scrollIntoView({ block: 'nearest' }); }
+let DESKTOP = null, KEYSTAT = null, FETCH = null;   // 桌面版狀態
+async function initDesktop() { try { DESKTOP = await window.pywebview.api.info(); KEYSTAT = await window.pywebview.api.key_status(); if (S.cfg.mode !== 'api') S.cfg.mode = 'api'; render(); } catch (e) { DESKTOP = null; } }
+window.addEventListener('pywebviewready', initDesktop);
+const ICON = {
+  tray: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>',
+  doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 12v6M9 15l3 3 3-3"/></svg>',
+  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>'
+};
+
+/* ---------- 儲存 ---------- */
+const DB = { open() { return new Promise((ok, no) => { try { const r = indexedDB.open('pubaudit', 1); r.onupgradeneeded = () => r.result.createObjectStore('s'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); } catch (e) { no(e); } }); },
+  async put(v) { const d = await this.open(); return new Promise((ok, no) => { const t = d.transaction('s', 'readwrite'); t.objectStore('s').put(v, 'state'); t.oncomplete = ok; t.onerror = () => no(t.error); }); },
+  async get() { const d = await this.open(); return new Promise((ok, no) => { const r = d.transaction('s').objectStore('s').get('state'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }); } };
+let saveTimer;
+function save() { clearTimeout(saveTimer); saveTimer = setTimeout(async () => { S.savedAt = new Date().toISOString(); try { await DB.put(JSON.stringify(S)); $('#saveState').textContent = '已自動儲存 · ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } catch (e) { $('#saveState').textContent = '無法自動儲存，請用「儲存專案檔」'; } }, 400); }
+let STATUS = '', ERR = '';
+function toast(t) { STATUS = t; const el = document.querySelector('#actionbar .status'); if (el) { el.textContent = t; el.style.opacity = 1; clearTimeout(toast._t); toast._t = setTimeout(() => { el.style.opacity = 0; STATUS = ''; }, 4000); } }
+function fail(msg) { ERR = msg; render(); }
+function download(name, text, type = 'text/plain;charset=utf-8') {
+  if (/\.csv$/i.test(name) && !/範本/.test(name) && window.I18N) text = I18N.csv(text);
+  if (DESKTOP) { window.pywebview.api.save_file(name, text).then(r => { if (r && r.ok) toast('已儲存「' + r.path + '」'); else if (r && !r.cancelled) fail('無法儲存檔案：' + (r.message || '')); }); return; } const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); toast('已下載「' + name + '」'); }
+async function copy(t) { try { await navigator.clipboard.writeText(t); } catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); } toast('已拷貝到剪貼簿'); }
+function pick(accept, multi) { return new Promise(ok => { const f = $('#filePick'); f.accept = accept || ''; f.multiple = !!multi; f.value = ''; f.onchange = () => ok([...f.files]); f.click(); }); }
+const readBuf = f => f.arrayBuffer();
+
+/* ---------- 推導 ---------- */
+const JCR = () => Object.assign({}, window.JCR_BUILTIN || {}, S.jcrExtra || {});
+function recompute() { const seen = new Set(); REC = []; S.files.forEach(f => f.recs.forEach(r => { const u = r['UT (Unique WOS ID)']; if (!seen.has(u)) { seen.add(u); REC.push(r); } })); ROWS = REC.length && S.teachers.length ? Core.matchPapers(S.teachers, REC, S.cfg.aff) : []; }
+const apiQueries = () => Core.buildApiQueries(S.teachers, { year: S.cfg.year, docTypes: S.cfg.docTypes, apiOrg: S.cfg.apiOrg });
+const queries = () => Core.buildQueries(S.teachers, { year: S.cfg.year, docTypes: S.cfg.docTypes, groupSize: S.cfg.groupSize });
+const tById = id => S.teachers.find(t => t.id === id) || {};
+const todoCount = () => ROWS.filter(r => (r.tier === 1 || r.tier === 3) && !S.decisions[r.id]).length;
+function stepDone(i) {
+  return [!!S.cfg.year && !!S.cfg.aff && S.step > 0, S.teachers.length > 0, S.teachers.some(t => t.include && t.en), REC.length > 0, ROWS.length > 0, ROWS.length > 0 && S.step > 5, ROWS.length > 0 && todoCount() === 0, false][i];
+}
+</script>
+<script>
+/* ---------- 給 AI 的 .md ---------- */
+function mdRoster() {
+  return `# 任務：整理「${S.cfg.org} ${S.cfg.college}」專任教師名單
+
+你是協助研究行政的 AI。請到官方網頁整理名單，輸出一個 CSV 檔，之後會匯入「教師論文盤點工具」。
+
+## 來源
+- 只用 ${S.cfg.org} 官方網站：${S.cfg.college}首頁 → 各系所／學科 → 「師資」或「專任教師」頁面。
+- 若使用者另外提供名單或網址，以使用者提供的為準。
+- 不要用第三方網站、不要憑記憶補人。
+
+## 範圍
+- 專任教師（教授、副教授、助理教授、講師、講座教授、專案教師）。兼任、合聘可列入但在「備註」註明。
+- 同一人列在多個系所時只列一次，主聘系所放「系所/學科」，其他寫進「備註」。
+
+## 輸出格式（CSV，UTF-8，第一列為欄名）
+\`\`\`
+學院,系所/學科,職稱,中文姓名,英文姓名,可信度,備註
+${S.cfg.college},醫學系／生理學科,教授,王小明,"Wang, Hsiao-Ming",高-官方,學科主任
+\`\`\`
+- 英文姓名：只填網頁上「官方寫出來的」英文名，照原樣抄（含大小寫、連字號）。網頁沒有就留空，不要自己拼音。
+- 可信度：網頁有英文名填「高-官方」；留空的填「低-無官方英文名」。
+- 檔名：\`教師名單_${S.cfg.college}.csv\`
+
+## 完成後回報
+- 系所數、教師總數、沒有英文名的人數。
+- 哪些系所網頁打不開或資料不完整。
+`;
+}
+function mdEnglish() {
+  const miss = S.teachers.filter(t => !t.en);
+  return `# 任務：查詢教師的官方英文姓名
+
+以下是「${S.cfg.org} ${S.cfg.college}」名單中缺英文姓名的教師，共 ${miss.length} 位。請查出他們發表論文或官方使用的英文姓名，輸出 CSV 檔，之後匯入「教師論文盤點工具」。
+
+## 查詢順序（由可信到次可信）
+1. ${S.cfg.org} 官方網頁（系所師資頁、個人頁、英文版網站）。
+2. 學校研究人員資料庫、ORCID、Web of Science ResearcherID 或 Google Scholar 個人頁（要能確認服務單位是 ${S.cfg.org}）。
+3. 以上都找不到：留空，不要自己用拼音猜。
+
+## 輸出格式（CSV，UTF-8）
+\`\`\`
+中文姓名,英文姓名,可信度,來源網址
+王小明,"Wang, Hsiao-Ming",高-官方,https://...
+\`\`\`
+- 可信度：官方網頁＝「高-官方」；ORCID／WoS／Scholar 且單位相符＝「中-資料庫」；找不到＝留空並填「低-查無」。
+- 同名同姓有多人時，只採用單位是 ${S.cfg.org} 的那一位；無法確定就填「低-同名無法確認」。
+- 檔名：\`英文姓名_補查.csv\`
+
+## 名單
+| 系所/學科 | 職稱 | 中文姓名 |
+|---|---|---|
+${miss.map(t => `| ${t.dept} | ${t.title} | ${t.zh} |`).join('\n')}
+`;
+}
+function mdWoS() {
+  const qs = queries();
+  return `# 任務：在 Web of Science 依檢索式逐組檢索並匯出 Excel
+
+用途：幫使用者在 Web of Science（WoS）依下方檢索式逐組檢索並匯出，供「教師論文盤點工具」讀取。
+你是代操作者，帳號、授權、責任都屬於使用者。**不蒐集、不輸入、不保存任何帳號密碼。**
+
+## 0. 開始前
+- 需要能操作使用者已登入瀏覽器的 AI（例如 Claude in Chrome、ChatGPT agent、Gemini、Comet）。
+- 請使用者先在自己的瀏覽器登入 WoS（校內網路、VPN 或機構登入）。確認已登入再開始。
+
+## 1. 規則（務必遵守）
+1. **一次只做一組**，做完並驗證後才做下一組；組與組之間等待 10 秒以上，不要並行。
+2. 只用一般網頁功能，不用任何破解、繞過或爬蟲程式。
+3. 遇到登入、驗證碼、同意條款、授權失效：**停下來，請使用者自己處理**。
+4. 檢索式一字不改，不增減作者。
+5. 本次共 ${qs.length} 組，屬一般研究用量；不要另外檢索或下載其他資料。
+
+## 2. 每一組的步驟
+1. 開 WoS Core Collection → **Advanced Search**（進階檢索）。
+2. 清空檢索框，貼上該組檢索式，執行。
+3. 記下結果頁頂端的筆數 **N**。N = 0 或出現錯誤訊息就停下回報。
+4. 點 **Export** → **Excel**。
+5. 「Record Content」選 **Full Record**（不要選 Author, Title, Source 或 Custom selection）。
+6. 範圍選 **Records from 1 to N**。**每次最多 1,000 筆**；N > 1,000 時分成 1–1000、1001–2000…分次匯出。
+7. 按 Export 下載。
+
+## 3. 已知陷阱（實測過）
+- 頁面捲動後，匯出選單的下拉位置會位移：**每次點擊前先重新截圖確認**，不要沿用舊座標。
+- 點選後等 2–3 秒再確認選到的是 Full Record 和 Excel，再按 Export。
+- 瀏覽器有時把下載存成沒有副檔名的暫存檔（例如 \`.com.google.Chrome.xxxxxx\`），它其實是有效的 xls；請改名即可。
+- 檢索式約 2,000–2,500 字元。貼上後確認結尾的 \`AND PY=${S.cfg.year} AND DT=(...)\` 完整沒被截斷。
+- 出現 Cookie 或問卷彈窗，選最少資料（拒絕非必要）後關閉。
+
+## 4. 每組完成後的驗證
+1. 檔名改為：\`author_group{組號}_{N}.xls\`（例：\`author_group2_258.xls\`；分次匯出則 \`author_group2_part1_1000.xls\`）。
+2. 檔案資料列數必須等於頁面上的 N（分次匯出則等於該段筆數）。不符就重做，不要自己補。
+3. 欄位須含 Author Full Names、Article Title、Source Title、Document Type、Publication Year、Addresses、UT (Unique WOS ID)、ISSN、eISSN、DOI。缺欄位代表 Record Content 選錯，重做。
+
+## 5. 全部完成後回報
+- 每組的 N 與檔名；任何失敗、重做、需要使用者介入的地方。
+- 請使用者把所有 .xls 檔拖進「教師論文盤點工具」第 4 步的匯入區。
+
+## 6. 不要做的事
+- 不判斷某篇是不是某位老師的論文（交給程式與人工審核）。
+- 不把檢索結果或使用者資料貼到其他網站。
+- 不下載其他資料庫（例如 JCR）的資料。
+
+---
+
+## 檢索式（共 ${qs.length} 組，年度 ${S.cfg.year}，文獻類型 ${S.cfg.docTypes.join('、')}）
+
+${qs.map(q => `### 第 ${q.no} 組（${q.teachers.length} 位）\n\n\`\`\`\n${q.query}\n\`\`\`\n`).join('\n')}
+`;
+}
+
+/* ---------- 版面 ---------- */
+const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+const MOD = IS_MAC ? '⌘' : 'Ctrl+';
+function renderNav() {
+  $('#steps').innerHTML = STEPS.map((s, i) => { const d = stepDone(i) && i !== S.step; return `<button class="step ${i === S.step ? 'on' : ''} ${d ? 'done' : ''}" data-go="${i}" ${i === S.step ? 'aria-current="step"' : ''}><span class="dot">${d ? '✓' : i + 1}</span>${s}</button>`; }).join('');
+  const done = STEPS.slice(0, -1).filter((_, i) => stepDone(i)).length;
+  $('#pbar').style.width = Math.round(done / (STEPS.length - 1) * 100) + '%';
+  $('#ptext').textContent = `已完成 ${done} / ${STEPS.length - 1} 個步驟`;
+}
+function go(i) { S.step = Math.max(0, Math.min(STEPS.length - 1, i)); ERR = ''; save(); render(); window.scrollTo({ top: 0 }); }
+const GATE = [
+  () => [true, ''],
+  () => [S.teachers.length > 0, S.teachers.length ? `${S.teachers.length} 位教師` : '請先匯入教師名單'],
+  () => { const n = S.teachers.filter(t => t.include && t.en).length; return [n > 0, n ? `${n} 位教師納入檢索` : '至少需要一位教師有英文姓名']; },
+  () => [REC.length > 0, REC.length ? `${REC.length} 篇論文` : (S.cfg.mode === 'api' ? (DESKTOP ? '請先取得資料' : '請匯入 API 結果檔') : '請匯入 WoS 匯出檔')],
+  () => [true, ''], () => [true, ''],
+  () => { const n = todoCount(); return [true, n ? `尚有 ${n} 筆待審核` : '審核完成']; },
+  () => [true, '']
+];
+function renderBar() {
+  const [ok, hint] = GATE[S.step]();
+  const back = S.step > 0 ? `<button class="btn lg" data-go="${S.step - 1}">上一步</button>` : '<span></span>';
+  const next = S.step < STEPS.length - 1 ? `<button class="btn primary lg" data-go="${S.step + 1}" ${ok ? '' : 'disabled'}>${S.step === 0 ? '開始' : '繼續'}</button>` : `<button class="btn primary lg" data-act="expSum">匯出彙總表</button>`;
+  $('#actionbar').innerHTML = `<div class="row" style="gap:14px">${back}<span class="status" style="opacity:${STATUS ? 1 : 0}">${esc(STATUS)}</span></div><div class="row" style="gap:14px"><span class="hint">${esc(hint)}</span>${next}</div>`;
+}
+function render() { renderNav(); $('#main').innerHTML = (ERR ? `<div class="note err" role="alert"><div>${esc(ERR)}</div><button class="btn plain sm" data-act="dismiss">關閉</button></div>` : '') + VIEWS[S.step](); renderBar(); }
+const head = (title, lede) => `<p class="eyebrow">步驟 ${S.step + 1}／${STEPS.length}</p><h1>${title}</h1><p class="lede">${lede}</p>`;
+const dropZone = (title, hint, act, multi) => `<div class="drop"><div class="ico">${ICON.tray}</div><b>${title}</b><p class="small">${hint}</p><button class="btn" data-act="${act}">選擇檔案…</button></div>`;
+const FMT = '可使用 Excel（.xlsx、.xls）或 CSV 檔';
+const ST = ['g', 'o', 'r', 'i', 'g'];
+const TIER_SHORT = ['確定掛本校', '疑似漏掛', '同名他人', '無法判定', '機構相符（API）'];
+
+/* ---------- 各步驟畫面 ---------- */
+const VIEWS = [
+// 0 範圍
+() => `${head('盤點範圍', '設定本次盤點的學校、單位、年度與採計的文獻類型。所有資料僅儲存在本機。')}
+<div class="group">
+<div class="grid2">
+ <label class="field"><span>學校</span><input type="text" id="cOrg" value="${esc(S.cfg.org)}"></label>
+ <label class="field"><span>學院或單位</span><input type="text" id="cCollege" value="${esc(S.cfg.college)}"></label>
+ <label class="field"><span>出版年度</span><input type="number" id="cYear" value="${esc(S.cfg.year)}" min="1990" max="2100"></label>
+</div>
+<div class="field" style="margin-top:16px"><span>文獻類型</span><div class="checks">${['Article', 'Review', 'Letter', 'Editorial Material', 'Proceedings Paper'].map(d => `<label><input type="checkbox" class="cDT" value="${d}" ${S.cfg.docTypes.includes(d) ? 'checked' : ''}>${d}</label>`).join('')}</div>
+<p class="small" style="margin:6px 0 0">教師評鑑一般僅採計期刊論文（Article、Review）。</p></div>
+<details class="more"><summary>進階設定</summary><div class="inner">
+ <label class="field" style="max-width:220px"><span>每組檢索人數</span><input type="number" id="cGroup" value="${esc(S.cfg.groupSize)}" min="5" max="60"></label>
+ <p class="small" style="margin:0"><b>本校地址判定規則</b></p>
+ <p class="small" style="margin:0">系統以 WoS 地址欄判斷作者是否隸屬本校。多種寫法以「|」分隔。</p>
+ <div class="row"><input type="text" id="cAff" value="${esc(S.cfg.aff)}" style="flex:1;min-width:260px"><select id="cAffPreset" style="width:auto"><option value="">套用預設值</option>${Object.keys(AFF_PRESETS).map(k => `<option>${k}</option>`).join('')}</select></div>
+</div></details></div>
+<div class="group"><div class="hero-action"><div style="flex:1"><h2>開啟既有專案</h2><p class="sub" style="margin:0">載入先前儲存的專案檔，接續作業或更新資料。</p></div><button class="btn" data-act="load">開啟專案檔…</button></div></div>
+<div class="group"><div class="hero-action"><div style="flex:1"><h2>先用範例資料試跑</h2><p class="sub" style="margin:0">載入一份虛構的名單與論文資料，五分鐘內走完全部步驟並看到報表。範例資料不含任何真實人物，不影響日後正式作業；載入會取代目前的資料。</p></div><button class="btn" data-act="sample">載入範例資料</button></div></div>`,
+
+// 1 名單
+() => { const n = S.teachers.length; const missing = S.teachers.filter(t => !t.en).length; return `${head('教師名單', '匯入教師名單，至少需包含系所、職稱與中文姓名；若有英文姓名可一併匯入。')}
+${n ? `<div class="note ok"><div>已匯入 ${n} 位教師${missing ? `，其中 ${missing} 位缺少英文姓名，可於下一步補齊` : ''}。重新匯入將取代現有名單。</div></div>` : ''}
+<div class="group">${dropZone(n ? '重新匯入名單' : '將名單檔案拖曳至此', FMT + '。第一列須為欄位名稱，並包含「中文姓名」。', 'pickRoster')}
+<details class="more" ${n ? '' : 'open'}><summary>其他建立名單的方式</summary><div class="inner">
+ <div class="option"><span class="num">1</span><div><h3>由 AI 助理整理</h3><p>下載說明文件並提供給 AI 助理（如 ChatGPT、Claude、Gemini）。AI 會依學校官方網頁產生「教師名單_${esc(S.cfg.college)}.csv」，完成後匯入即可。</p><div class="row"><button class="btn sm" data-act="mdRoster">下載說明文件</button><button class="btn sm" data-act="copyRoster">拷貝內容</button></div></div></div>
+ <div class="option"><span class="num">2</span><div><h3>填寫範本</h3><p>以 Excel 開啟範本填寫後存檔，再匯入。</p><button class="btn sm" data-act="tpl">下載範本</button></div></div>
+ <div class="option"><span class="num">3</span><div style="flex:1"><h3>從試算表貼上</h3><p>於 Excel 選取含欄位名稱的表格，拷貝後貼至下方。</p><textarea id="paste" placeholder="學院	系所/學科	職稱	中文姓名	英文姓名"></textarea><button class="btn sm" data-act="pasteRoster" style="margin-top:8px">匯入貼上內容</button></div></div>
+</div></details></div>
+${n ? `<div class="group flush"><div class="ghead"><h2>名單內容</h2></div><div class="list"><table><thead><tr><th>系所／學科</th><th>職稱</th><th>中文姓名</th><th>英文姓名</th><th>備註</th></tr></thead><tbody>${S.teachers.map(t => `<tr><td translate="no">${esc(t.dept)}</td><td translate="no">${esc(t.title)}</td><td translate="no">${esc(t.zh)}</td><td>${t.en ? esc(t.en) : '<span class="st o">未填</span>'}</td><td class="small" translate="no">${esc(t.note)}</td></tr>`).join('')}</tbody></table></div></div>` : ''}`; },
+
+// 2 英文姓名
+() => { const miss = S.teachers.filter(t => !t.en).length; const inc = S.teachers.filter(t => t.include && t.en).length; return `${head('英文姓名', 'WoS 以英文姓名檢索。系統會自動產生常見寫法（姓名順序、連字號）。可關閉同名風險較高或資料不確定者的檢索。')}
+<div class="stats"><div class="stat"><b>${S.teachers.length}</b><span>教師</span></div><div class="stat"><b>${inc}</b><span>納入檢索</span></div><div class="stat"><b>${miss}</b><span>缺少英文姓名</span></div></div>
+${miss ? `<div class="group"><div class="hero-action"><div style="flex:1"><h2>補齊英文姓名</h2><p class="sub" style="margin:0">下載說明文件（已附 ${miss} 位教師名單）提供給 AI 助理查詢，取得「英文姓名_補查.csv」後匯入。</p></div><button class="btn" data-act="mdEnglish">下載說明文件</button></div>
+<div style="margin-top:14px">${dropZone('將補查結果拖曳至此', FMT + '，須包含「中文姓名」與「英文姓名」欄位。', 'pickEnglish')}</div></div>` : ''}
+<div class="group flush"><div class="list"><table><thead><tr><th>納入</th><th>系所／學科</th><th>中文姓名</th><th style="min-width:210px">英文姓名</th><th>檢索寫法</th></tr></thead><tbody>
+${S.teachers.map(t => `<tr><td><input type="checkbox" class="switch tInc" data-id="${t.id}" ${t.include ? 'checked' : ''} ${t.en ? '' : 'disabled'} aria-label="納入 ${esc(t.zh)}"></td><td translate="no">${esc(t.dept)}</td><td><span translate="no">${esc(t.zh)}</span>${/^低/.test(t.conf) ? ' <span class="st o">待確認</span>' : ''}</td><td><input type="text" class="tEn" data-id="${t.id}" value="${esc(t.en)}" placeholder="Wang, Hsiao-Ming"></td><td class="small" translate="no" data-var="${t.id}">${esc(Core.nameVariants(t.en).join('；'))}</td></tr>`).join('')}
+</tbody></table></div></div>`; },
+
+// 3 WoS
+() => { const api = S.cfg.mode === 'api'; const qs = api ? apiQueries() : queries();
+  const fileTable = S.files.length ? `<div class="list" style="margin-top:14px"><table><thead><tr><th>檔案</th><th class="num">讀取筆數</th><th class="num">應有筆數</th><th>狀態</th><th></th></tr></thead><tbody>${S.files.map((f, i) => `<tr><td>${esc(f.name)}${f.api ? ' <span class="small">（API）</span>' : ''}</td><td class="num">${f.n}</td><td class="num">${f.expected ?? '—'}</td><td>${f.missing.length ? `<span class="st r">欄位不足</span><div class="small">缺少 ${esc(f.missing.join('、'))}，請改選 Full Record 重新匯出。</div>` : f.expected != null && f.expected !== f.n ? `<span class="st o">筆數不符</span><div class="small">${f.api ? '請重新執行取得程式。' : '請重新匯出此組。'}</div>` : '<span class="st g">正常</span>'}</td><td class="num"><button class="btn plain sm" data-rmfile="${i}">移除</button></td></tr>`).join('')}</tbody></table></div>
+<div class="note info" style="margin:14px 0 0"><div>合併去除重複後共 ${REC.length} 篇論文。${!api && S.files.length < qs.length ? `檢索式共 ${qs.length} 組，目前已匯入 ${S.files.length} 個檔案，請確認各組均已匯出。` : ''}</div></div>` : '';
+  const modeSeg = `<div class="seg" role="tablist" aria-label="取得方式" style="margin-bottom:16px"><button role="tab" data-wmode="web" class="${api ? '' : 'on'}" aria-selected="${!api}">網頁匯出</button><button role="tab" data-wmode="api" class="${api ? 'on' : ''}" aria-selected="${api}">API 自動取得</button></div>`;
+  if (!api) return `${head('WoS 資料', `系統已依名單產生 ${qs.length} 組檢索式。請由具 Web of Science 使用權限者完成檢索與匯出，再將檔案匯入。`)}${modeSeg}
+<div class="group"><div class="hero-action"><div style="flex:1"><h2>檢索與匯出說明</h2><p class="sub" style="margin:0">請先於瀏覽器登入 Web of Science（建議使用 Chrome，校外請先連線 VPN）。說明文件可提供給能操作瀏覽器的 AI 助理代為執行，亦可依文件自行操作。匯出完成後請登出，以免占用學校同時上線名額。</p></div><button class="btn primary" data-act="mdWoS">下載說明文件</button></div>
+<details class="more"><summary>檢索式（${qs.length} 組）</summary><div class="inner"><p class="small" style="margin:0">Advanced Search 貼上檢索式 → Export → Excel → Record Content 選擇 Full Record。單次最多匯出 1,000 筆。</p>
+<div>${qs.map(q => `<div class="qrow"><div class="meta"><b>第 ${q.no} 組</b><div class="small">${q.teachers.length} 位教師</div></div><div class="q" style="flex:1">${esc(q.query)}</div><button class="btn sm" data-copyq="${q.no}">拷貝</button></div>`).join('')}</div></div></details></div>
+<div class="group">${dropZone('將 WoS 匯出檔拖曳至此', FMT + '，亦支援 WoS 的 Tab-delimited（.txt）。可一次匯入多個檔案。', 'pickWoS', true)}${fileTable}</div>`;
+  return `${head('WoS 資料', `使用 Web of Science Starter API 自動取得資料。系統已依名單產生 ${qs.length} 組檢索（每組 20 位）${DESKTOP ? '。' : '，需具備 API Key。'}`)}${modeSeg}
+<div class="group"><h2>檢索設定</h2><p class="sub">API 不提供作者地址，因此改以「機構」條件限定本校，僅回傳姓名相符且論文含本校的紀錄。</p>
+<div class="grid2"><label class="field"><span>機構名稱（WoS Organization-Enhanced）</span><input type="text" id="cApiOrg" value="${esc(S.cfg.apiOrg)}"></label>
+<label class="field"><span>收錄範圍（edition）</span><input type="text" id="cApiEd" value="${esc(S.cfg.apiEdition)}"></label></div>
+<p class="small" style="margin:8px 0 0">機構名稱請以 WoS 網頁「分析結果 → 機構（Organizations-Enhanced）」顯示的寫法為準。收錄範圍預設為本校訂閱的 SCIE 與 SSCI，留空則不限定。</p></div>
+${DESKTOP ? desktopApiPanel(qs) : ''}<div class="group" ${DESKTOP ? 'hidden' : ''}><h2>取得資料</h2><p class="sub">基於瀏覽器安全限制，本工具無法直接連線 API，請下載取得程式於本機執行。程式只使用系統內建功能，API Key 僅於執行時輸入，不會被儲存。</p>
+<div class="option" style="margin-bottom:10px"><span class="num">1</span><div style="flex:1"><h3>下載取得程式</h3><p>程式已包含上述 ${qs.length} 組檢索。名單或設定變更後請重新下載。</p><div class="row"><button class="btn primary sm" data-act="apiMac">下載 Mac 版</button><button class="btn sm" data-act="apiWin">下載 Windows 版</button></div></div></div>
+<div class="option" style="margin-bottom:10px"><span class="num">2</span><div><h3>執行並輸入 API Key</h3><p><b>Mac</b>：開啟「終端機」，輸入 <code>bash</code> 與一個空格，將下載的程式拖入視窗後按 Return。<br><b>Windows</b>：於程式按右鍵 →「用 PowerShell 執行」。<br>依提示貼上 API Key。程式會先自動確認 Key 是否有效，通過後才開始取得資料；完成後會在同一資料夾產生「WoS_API結果_${esc(S.cfg.college)}_${esc(S.cfg.year)}.txt」。</p><p class="small" style="margin:6px 0 0"><b>API Key 位置</b>：developer.clarivate.com → 右上角帳號 → Applications → 您的 Application →「API Key」。請勿貼成 Application ID、Client ID 或 Client Secret；Starter API 訂閱狀態須為 Approved。</p></div></div>
+<div class="option"><span class="num">3</span><div style="flex:1"><h3>匯入結果檔</h3><p>將結果檔拖曳至下方。</p></div></div>
+<div style="margin-top:14px">${dropZone('將 API 結果檔拖曳至此', '可匯入「WoS_API結果_…txt」，亦可同時匯入網頁匯出的檔案。', 'pickWoS', true)}</div>${fileTable}</div>`; },
+
+// 4 比對
+() => { const c = [0, 0, 0, 0, 0]; ROWS.forEach(r => c[r.tier]++); const tset = new Set(ROWS.map(r => r.tid)); const inc = S.teachers.filter(t => t.include && t.en); const nohit = inc.filter(t => !tset.has(t.id));
+  const desc = ['作者本人地址含本校，採計', '同篇其他作者含本校，預設採計，建議抽查', '全篇未出現本校，預設不採計', '無法對應作者地址，需審核', 'API 檢索已限定本校機構，採計'];
+  return `${head('比對結果', `共 ${REC.length} 篇論文，${tset.size} 位教師有相符紀錄。系統依各作者在該篇的地址分類。`)}
+<div class="stats">${c.map((n, i) => !n && (i === 4 || c[4]) ? '' : `<div class="stat"><b>${n}</b><span class="st ${ST[i]}">${TIER_SHORT[i]}</span><div class="small">${desc[i]}</div></div>`).join('')}</div>
+${nohit.length ? `<div class="group"><h2>無相符紀錄的教師（${nohit.length} 位）</h2><p class="sub">可能為當年度無論文，或英文姓名寫法不同。可回到「英文姓名」修正後重新檢索。</p><p class="small" style="margin:0"><span translate="no">${nohit.map(t => esc(t.zh)).join('、')}</span></p></div>` : '<div class="note ok"><div>所有納入檢索的教師均有相符紀錄。</div></div>'}`; },
+
+// 5 期刊品質
+() => { const J = JCR(); const js = {}; ROWS.filter(r => Core.counted(r, S.decisions)).forEach(r => { js[r.journal] = js[r.journal] || [r, 0]; js[r.journal][1]++; });
+  const total = Object.keys(js).length; const miss = Object.entries(js).filter(([k, v]) => !Core.jcrLookup(v[0], J));
+  return `${head('期刊品質', '依各篇論文的 ISSN 對照期刊資料，補上 JIF 與 JCR 分區（Q1–Q4）。')}
+<div class="stats"><div class="stat"><b>${total}</b><span>採計論文涵蓋期刊</span></div><div class="stat"><b>${total - miss.length}</b><span>已對應品質資料</span></div><div class="stat"><b>${miss.length}</b><span>無對應資料</span></div></div>
+${miss.length ? `<p class="small" style="margin:-4px 0 16px">無對應資料：${miss.map(([k, v]) => esc(k) + `（${v[1]} 篇）`).join('、')}</p>` : ''}
+<div class="group"><h2>資料來源</h2>
+${S.jcrExtraInfo ? `<div class="note ok" style="margin:10px 0 0"><div>使用 ${esc(S.jcrExtraInfo)}，優先於內建資料。</div><button class="btn plain sm" data-act="clearJCR">移除</button></div>` : `<div class="note warn" style="margin:10px 0 0"><div>目前使用內建資料：${esc(window.JCR_BUILTIN_INFO || '')}。正式報告建議匯入學校 JCR 官方匯出檔。</div></div>`}
+<details class="more"><summary>匯入 JCR 官方匯出檔</summary><div class="inner">
+${dropZone('將 JCR 匯出檔拖曳至此', FMT + '。JCR 單次最多匯出 600 筆，可依學科分次匯出後一併匯入。', 'pickJCR', true)}</div></details></div>`; },
+
+// 6 審核
+() => { const teachersWith = [...new Set(ROWS.map(r => r.tid))].map(tById).sort((a, b) => (a.dept + a.zh).localeCompare(b.dept + b.zh));
+  const f = reviewFilter; let L = reviewList();
+  const modes = [['todo', '待審核'], ['suspect', '疑似與無法判定'], ['other', '同名他人'], ['decided', '已審核'], ['all', '全部']];
+  const shown = L.slice(0, 300); const todo = todoCount(); rvIdx = Math.max(0, Math.min(rvIdx, shown.length - 1)); const undec = L.filter(r => !S.decisions[r.id]).length;
+  return `${head('人工審核', '系統無法區分同名同姓，請由熟悉教師研究領域者確認各篇論文是否為本人著作。審核結果將反映於報表。')}
+<div class="note ${todo ? 'warn' : 'ok'}"><div>${todo ? `尚有 ${todo} 筆待審核。未審核者依預設規則計算：疑似漏掛採計，無法判定不採計。` : '待審核項目已全部完成。'}</div></div>
+<div class="group flush"><div class="ghead"><div class="row" style="justify-content:space-between"><div class="seg" role="tablist" aria-label="篩選">${modes.map(([v, l]) => `<button role="tab" data-mode="${v}" class="${f.mode === v ? 'on' : ''}" aria-selected="${f.mode === v}">${l}</button>`).join('')}</div>
+<select id="rvT" style="width:auto;max-width:280px"><option value="">所有教師</option>${teachersWith.map(t => `<option value="${t.id}" translate="no" ${f.tid === t.id ? 'selected' : ''}>${esc(t.zh)}（${esc(t.dept)}）</option>`).join('')}</select></div>
+<p class="small" style="margin:8px 0 4px">${L.length} 筆${L.length > 300 ? '，顯示前 300 筆；可依教師篩選' : ''}</p>
+${L.length ? `<div class="row" style="margin:4px 0 6px"><span class="small">快捷鍵：<span class="kbd">↑</span><span class="kbd">↓</span> 移動，<span class="kbd">Y</span> 本人，<span class="kbd">N</span> 非本人，<span class="kbd">U</span> 取消標記</span>${undec ? `<span style="flex:1"></span><button class="btn plain sm" data-bulk="yes">將尚未標記的 ${undec} 筆全部標為本人</button><button class="btn plain sm" data-bulk="no">全部標為非本人</button>` : ''}</div>` : ''}</div>
+${L.length ? `<div class="list" style="max-height:640px"><table><thead><tr><th>教師</th><th>論文</th><th>該作者於本篇的單位</th><th>分類</th><th>是否為本人</th></tr></thead><tbody>
+${shown.map((r, i) => { const t = tById(r.tid); const d = S.decisions[r.id]; return `<tr data-ri="${i}" class="${i === rvIdx ? 'rvf' : ''}"><td><b translate="no">${esc(t.zh)}</b><div class="small">${esc(r.wosName)}<br>第 ${esc(r.pos)} 作者</div></td><td style="max-width:340px">${esc(r.title)}<div class="small">${esc(r.journal)}，${esc(r.year)}${r.doi ? `，<a href="https://doi.org/${esc(r.doi)}" target="_blank" rel="noopener">DOI</a>` : ''}</div></td><td class="small" style="max-width:240px">${esc(r.aff) || '—'}</td><td><span class="st ${ST[r.tier]}">${TIER_SHORT[r.tier]}</span><div class="small" style="margin-top:2px">${Core.counted(r, S.decisions) ? '採計' : '不採計'}</div></td>
+<td><div class="decide" role="group" aria-label="是否為本人"><button class="yes ${d === 'yes' ? 'on' : ''}" data-dec="${d === 'yes' ? '' : 'yes'}" data-id="${esc(r.id)}" aria-pressed="${d === 'yes'}">本人</button><button class="no ${d === 'no' ? 'on' : ''}" data-dec="${d === 'no' ? '' : 'no'}" data-id="${esc(r.id)}" aria-pressed="${d === 'no'}">非本人</button></div></td></tr>`; }).join('')}
+</tbody></table></div>` : '<div style="padding:28px;text-align:center" class="small">此分類沒有項目。</div>'}</div>`; },
+
+// 7 報表
+() => { const sum = Core.summarize(S.teachers, ROWS, S.decisions, JCR()).sort((a, b) => (a['系所/學科'].localeCompare(b['系所/學科'])) || b['採計篇數'] - a['採計篇數']);
+  const ut = new Set(ROWS.filter(r => Core.counted(r, S.decisions)).map(r => r.ut)); const tot = k => sum.reduce((a, b) => a + (b[k] || 0), 0); const todo = tot('待審核');
+  const cols = [['系所/學科', ''], ...(sum.some(x => x['職稱']) ? [['職稱', '']] : []), ['中文姓名', ''], ['採計篇數', 'num'], ['Q1', 'num'], ['Q2', 'num'], ['Q3', 'num'], ['Q4', 'num'], ['Q1+Q2占比', 'num'], ['平均JIF', 'num'], ['最高JIF', 'num'], ['待審核', 'num']];
+  return `${head(`${esc(S.cfg.college)} ${esc(S.cfg.year)} 年度論文統計`, `${esc(S.cfg.org)}｜資料來源：Web of Science Core Collection｜文獻類型：${esc(S.cfg.docTypes.join('、'))}`)}
+${S.sample ? `<div class="note warn"><div>此為範例資料（全部為虛構），數字沒有任何實際意義。</div></div>` : ''}${todo ? `<div class="note warn noprint"><div>尚有 ${todo} 筆待審核，以下數字依預設規則計算。</div><button class="btn plain sm" data-go="6">前往審核</button></div>` : ''}
+<div class="stats"><div class="stat"><b>${ut.size}</b><span>採計論文（不重複）</span></div><div class="stat"><b>${sum.filter(s => s['採計篇數'] > 0).length}／${sum.length}</b><span>有採計論文的教師</span></div><div class="stat"><b>${tot('Q1')}</b><span>Q1 篇次</span></div><div class="stat"><b>${tot('Q1') + tot('Q2')}</b><span>Q1＋Q2 篇次</span></div></div>
+<div class="group noprint"><div class="hero-action"><div style="flex:1"><h2>匯出</h2><p class="sub" style="margin:0">CSV 檔可直接以 Excel 開啟。「篇次」指同一篇有多位本院教師時分別計算；採計論文總數已去除重複。</p></div></div>
+<div class="row" style="margin-top:12px"><button class="btn primary" data-act="expSum">教師彙總表</button><button class="btn" data-act="expRows">逐篇清單</button><button class="btn" data-act="expJournals">期刊對照表</button><button class="btn" data-act="expConds">計算條件</button><button class="btn" data-act="expCheck">抽查表（50 筆）</button><button class="btn" data-act="print">列印…</button><button class="btn" data-act="save">儲存專案檔…</button></div>
+<p class="small" style="margin:10px 0 0">抽查表隨機抽 50 筆系統判定，供人工逐筆查核；填完「對／錯」後，錯誤筆數除以 50 即為這份資料的誤判率估計。</p></div>
+<div class="group flush"><div class="list" style="max-height:none"><table class="sum"><thead><tr>${cols.map(([c, k]) => `<th class="${k}">${c}</th>`).join('')}</tr></thead><tbody>
+${sum.map(s => `<tr>${cols.map(([c, k]) => `<td class="${k}" ${['系所/學科', '職稱', '中文姓名'].includes(c) ? 'translate="no"' : ''}>${esc(s[c])}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>
+<div class="group"><h2>計算條件與資料來源</h2><table class="conds"><tbody>${condsList().map(([k, v]) => `<tr><th>${k}</th><td>${esc(v)}</td></tr>`).join('')}</tbody></table>
+<p class="disc pfoot" style="margin-top:12px">免責聲明：本介面的英文、日文、韓文與西班牙文譯文由 AI 協助產生，尚未經母語人士審閱，僅供參考，不保證完全準確；與繁體中文原文有出入時，以繁體中文為準。教師姓名、系所、期刊名稱與統計數字為原始資料與計算結果，不受翻譯影響。</p></div>`; }
+];
+
+/* ---------- 桌面版：App 內輸入 API Key 與直接取得 ---------- */
+function desktopApiPanel(qs) {
+  const k = KEYSTAT || {}; const f = FETCH;
+  const pct = f && f.totalReq ? Math.round(f.done / f.totalReq * 100) : 0;
+  return `<div class="group"><h2>API Key</h2>
+${k.hasKey ? `<div class="note ok" style="margin:8px 0 12px"><div>已設定 API Key（${k.length} 字元）${k.secure ? '，安全存放於系統' + (DESKTOP.platform === 'darwin' ? '鑰匙圈' : '認證管理員') : '，本次執行期間有效'}。</div><button class="btn plain sm" data-act="keyCheck">重新驗證</button><button class="btn plain sm" data-act="keyClear" style="color:var(--red)">清除</button></div>`
+  : `<p class="sub">貼上您申請的 Web of Science Starter API Key。系統會先驗證，通過後安全存放於本機，之後不需重複輸入。</p>`}
+<div class="row"><input type="password" id="apiKeyIn" placeholder="${k.hasKey ? '輸入新的 API Key 以更換' : '貼上 API Key'}" autocomplete="off" style="flex:1;min-width:280px"><button class="btn ${k.hasKey ? '' : 'primary'}" data-act="keySave">儲存並驗證</button></div>
+<p class="small" style="margin:8px 0 0">API Key 位置：developer.clarivate.com → 右上角帳號 → Applications → 您的 Application →「API Key」。尚未申請請參閱說明書「申請 WoS 帳號與 API Key」。</p></div>
+<div class="group"><h2>取得資料</h2><p class="sub">共 ${qs.length} 組檢索，完成後資料會直接匯入，不需處理任何檔案。</p>
+${f ? `<div style="margin:6px 0 10px"><div style="height:6px;border-radius:3px;background:var(--fill);overflow:hidden"><i style="display:block;height:100%;width:${pct}%;background:var(--accentFill);transition:width .2s"></i></div>
+<p class="small" style="margin:6px 0 0">${esc(f.msg)}</p></div>` : ''}
+<div class="row">${f && f.running ? `<button class="btn" data-act="apiCancel">停止</button>` : (S.fetchProg && S.fetchProg.done > 0 && S.fetchProg.sig === apiSig(qs)) ? `<button class="btn primary" data-act="apiRun" ${k.hasKey ? '' : 'disabled'}>繼續取得（已完成 ${S.fetchProg.done} 次請求）</button><button class="btn" data-act="apiFresh">重新開始</button>` : `<button class="btn primary" data-act="apiRun" ${k.hasKey ? '' : 'disabled'}>${REC.length ? '重新取得資料' : '開始取得資料'}</button>`}</div></div>`;
+}
+const apiSig = qs => JSON.stringify([S.cfg.year, S.cfg.docTypes, S.cfg.apiOrg, S.cfg.apiEdition, qs.map(q => q.query)]);
+const sleep = ms => new Promise(z => setTimeout(z, ms));
+async function desktopFetch(fresh) {
+  const qs = apiQueries(); const api = window.pywebview.api; const sig = apiSig(qs);
+  if (fresh || !S.fetchProg || S.fetchProg.sig !== sig) S.fetchProg = { sig, pages: [], qi: 0, page: 1, done: 0, totalReq: qs.length };
+  const fp = S.fetchProg; const resumed = fp.done > 0;
+  FETCH = { running: true, done: fp.done, totalReq: fp.totalReq, msg: resumed ? '從上次中斷處繼續…' : '正在驗證 API Key…' }; render();
+  const chk = await api.check_key(); if (!chk.ok) { FETCH = null; save(); fail(chk.message); return; }
+  const stop = msg => { save(); FETCH = { running: false, done: fp.done, totalReq: fp.totalReq, msg }; render(); };
+  while (fp.qi < qs.length) {
+    const i = fp.qi; let total = 0, tries = 0;
+    while (true) {
+      if (!FETCH || FETCH.cancel) return stop(`已暫停（已完成 ${fp.done} 次請求），可按「繼續取得」從中斷處接續。`);
+      FETCH.done = fp.done; FETCH.totalReq = fp.totalReq; FETCH.msg = `第 ${i + 1}／${qs.length} 組，第 ${fp.page} 頁…`; render();
+      const r = await api.fetch_page(qs[i].query, fp.page, S.cfg.apiEdition || '');
+      if (r.status === 429) { FETCH.msg = '請求太頻繁，5 秒後重試…'; render(); await sleep(5000); continue; }
+      if (r.status === 0 || r.status >= 500) { if (++tries <= 3) { const ms = tries * (window.__RETRY_MS ?? 4000); FETCH.msg = `連線不穩，${Math.round(ms / 1000)} 秒後重試（${tries}／3）…`; render(); await sleep(ms); continue; } return stop(`${r.status === 0 ? '無法連線至 Clarivate，請確認網路連線' : `伺服器暫時無法回應（HTTP ${r.status}）`}。已完成 ${fp.done} 次請求並保留進度，可按「繼續取得」從中斷處接續。`); }
+      if (r.status !== 200) { const m = r.status === 400 ? '檢索參數不被接受（400）。請確認機構名稱與收錄範圍設定，或將收錄範圍清空後再試。' : `第 ${i + 1} 組第 ${fp.page} 頁失敗（HTTP ${r.status}）。`; S.fetchProg = null; FETCH = null; save(); fail(m + (r.status !== 400 ? ' ' + String(r.body).slice(0, 200) : '')); return; }
+      tries = 0; fp.pages.push(r.body);
+      try { total = JSON.parse(r.body).metadata.total || 0; } catch (e) { total = 0; }
+      if (fp.page === 1) fp.totalReq += Math.max(0, Math.ceil(total / 50) - 1);
+      fp.done++;
+      if (fp.page * 50 >= total) { fp.qi++; fp.page = 1; save(); break; }
+      fp.page++; save(); await sleep(250);
+    }
+    await sleep(250);
+  }
+  const pages = fp.pages;
+  const res = Core.parseApiResult(pages.join('\n---PAGE---\n'), !!String(S.cfg.apiOrg || '').trim());
+  const name = 'WoS API 自動取得（' + new Date().toLocaleString() + '）';
+  S.files = S.files.filter(x => !x.auto); S.files.push({ name, n: res.records.length, expected: res.total, missing: [], api: true, auto: true, at: new Date().toISOString(), recs: res.records });
+  S.fetchProg = null;
+  FETCH = { running: false, done: 1, totalReq: 1, msg: `完成：${pages.length} 次請求，取得 ${res.records.length} 筆（合併後 ${new Set(res.records.map(r => r['UT (Unique WOS ID)'])).size} 篇）。` };
+  recompute(); save(); render(); toast('資料已匯入');
+}
+
+/* ---------- 匯入處理 ---------- */
+async function importRoster(files) {
+  try { const f = files[0]; const t = await Core.readTable(f.name, await readBuf(f)); const r = Core.rosterFromTable(t); if (!r.length) throw new Error('沒有讀到任何教師'); S.teachers = r; S.decisions = {}; recompute(); save(); render(); toast(`已匯入 ${r.length} 位教師`); }
+  catch (e) { fail('無法讀取名單：' + e.message); }
+}
+async function importEnglish(files) {
+  try { const t = await Core.readTable(files[0].name, await readBuf(files[0])); const h = t[0].map(x => String(x).trim()); const iZ = h.findIndex(x => /中文姓名|姓名/.test(x)), iE = h.findIndex(x => /英文/.test(x)), iC = h.findIndex(x => /可信度/.test(x));
+    if (iZ < 0 || iE < 0) throw new Error('需要「中文姓名」「英文姓名」欄位'); let n = 0;
+    for (const r of t.slice(1)) { const zh = String(r[iZ] || '').trim(), en = String(r[iE] || '').trim(); if (!zh || !en) continue; const conf = iC >= 0 ? String(r[iC] || '') : '';
+      S.teachers.filter(x => x.zh === zh && !x.en).forEach(x => { x.en = en; x.conf = conf; x.include = !/^低/.test(conf); n++; }); }
+    recompute(); save(); render(); toast(`補上 ${n} 位英文姓名`); } catch (e) { fail('匯入失敗：' + e.message); }
+}
+async function importWoS(files) {
+  const errs = [];
+  for (const f of files) {
+    try { const buf = await readBuf(f); const head = new TextDecoder().decode(new Uint8Array(buf).subarray(0, 64)).trim();
+      if (head.startsWith('{') || head.startsWith('\ufeff{')) { const r = Core.parseApiResult(Core.decodeText(buf), !!String(S.cfg.apiOrg || '').trim());
+        S.files = S.files.filter(x => x.name !== f.name); S.files.push({ name: f.name, n: r.records.length, expected: r.total, missing: [], api: true, at: new Date().toISOString(), recs: r.records }); continue; }
+      const t = await Core.readTable(f.name, buf); const w = Core.wosRecords(t);
+      const keep = ['UT (Unique WOS ID)', 'Author Full Names', 'Addresses', 'Article Title', 'Source Title', 'Document Type', 'Publication Year', 'ISSN', 'eISSN', 'DOI'];
+      const slim = w.records.map(r => { const o = {}; keep.forEach(k => o[k] = r[k] == null ? '' : r[k]); return o; });
+      S.files = S.files.filter(x => x.name !== f.name);
+      S.files.push({ name: f.name, n: slim.length, expected: Core.expectedFromFilename(f.name), missing: w.missing, at: new Date().toISOString(), recs: slim });
+    } catch (e) { errs.push(f.name + '：' + e.message); }
+  }
+  recompute(); save(); render(); if (errs.length) fail('下列檔案無法讀取：' + errs.join('；')); else toast('已匯入 ' + files.length + ' 個檔案');
+}
+async function importJCR(files) {
+  let n = 0; const names = [];
+  for (const f of files) { try { const r = Core.parseJCRExport(await Core.readTable(f.name, await readBuf(f))); Object.assign(S.jcrExtra, r.map); n += r.n; names.push(f.name); } catch (e) { fail(f.name + '：' + e.message); } }
+  if (names.length) { S.jcrExtraInfo = `JCR 官方匯出（${Object.keys(S.jcrExtra).length} 個 ISSN）`; save(); render(); toast('已匯入期刊資料'); }
+}
+const dropHandlers = { 1: importRoster, 2: importEnglish, 3: importWoS, 5: importJCR };
+
+/* ---------- 匯出 ---------- */
+function rowsExport() { const J = JCR(); return ROWS.map(r => { const t = tById(r.tid); const q = Core.jcrLookup(r, J) || [null, '', '']; return { '系所/學科': t.dept, '職稱': t.title, '中文姓名': t.zh, '英文姓名': t.en, 'WoS作者名': r.wosName, '作者順位': r.pos, '判定': Core.TIER_LABEL[r.tier], '人工審核': { yes: '本人', no: '非本人' }[S.decisions[r.id]] || '', '採計': Core.counted(r, S.decisions) ? '是' : '否', '論文標題': r.title, '期刊': r.journal, 'JIF': q[0] ?? '', 'JCR分區': q[1], '中科院分區': q[2], '文獻類型': r.dtype, '出版年': r.year, 'ISSN': r.issn, 'eISSN': r.eissn, 'DOI': r.doi, 'UT': r.ut, '該作者在此篇的單位': r.aff }; })
+  .sort((a, b) => (a['系所/學科'] + a['中文姓名']).localeCompare(b['系所/學科'] + b['中文姓名']) || (a['採計'] === b['採計'] ? 0 : a['採計'] === '是' ? -1 : 1)); }
+/* ---------- 範例資料、計算條件、抽查表 ---------- */
+function buildSample() {
+  const T = [['醫學系／生理學科', '教授', '王示範', 'Wang, Shih-Fan'], ['醫學系／生理學科', '副教授', '李樣本', 'Lee, Yang-Pen'], ['醫學系／內科學科', '教授', '陳虛擬', 'Chen, Hsu-Ni'], ['醫學系／內科學科', '助理教授', '林測試', 'Lin, Tse-Shih'],
+    ['藥學系', '教授', '張範例', 'Chang, Fan-Li'], ['藥學系', '助理教授', '黃練習', 'Huang, Lien-Hsi'], ['醫技系', '副教授', '吳演示', 'Wu, Yen-Shih'], ['醫技系', '助理教授', '劉教學', 'Liu, Chiao-Hsueh']]
+    .map((x, k) => ({ id: 't' + (k + 1), college: '示範學院', dept: x[0], title: x[1], zh: x[2], en: x[3], note: '', conf: '', include: true }));
+  const J = [['NATURE MEDICINE', '1078-8956', '1546-170X'], ['SCIENTIFIC REPORTS', '2045-2322', ''], ['INTERNATIONAL JOURNAL OF MOLECULAR SCIENCES', '1422-0067', ''], ['PLOS ONE', '1932-6203', ''], ['MEDICINE', '0025-7974', ''], ['BIOMEDICINES', '2227-9059', ''], ['CANCERS', '2072-6694', '']];
+  const topics = ['cell signaling', 'drug delivery', 'clinical outcomes', 'biomarkers', 'imaging methods', 'metabolic pathways'];
+  const OTH = ['Smith, John', 'Garcia, Maria', 'Kim, Soo-Jin', 'Tanaka, Hiro'];
+  const recs = [];
+  for (let i = 0; i < 36; i++) {
+    const a = T[i % 8], b = i % 5 === 0 ? T[(i + 3) % 8] : null, c = i % 12, j = J[i % 7];
+    const names = [OTH[i % 4], a.en, ...(b ? [b.en] : []), OTH[(i + 1) % 4]];
+    let addr; const demo = 'Demo Univ, Sch Med, Taichung, Taiwan';
+    if (c === 7) addr = `[${a.en}] Univ Elsewhere, Dept Med, Boston, USA; [${OTH[i % 4]}] Univ Elsewhere, Boston, USA` + (b ? `; [${b.en}] ${demo}` : '');
+    else if (c === 10) addr = `[${a.en}] Natl Hosp, Taipei, Taiwan; [${OTH[i % 4]}] ${demo}` + (b ? `; [${b.en}] ${demo}` : '');
+    else if (c === 11) addr = `[${OTH[i % 4]}] ${demo}` + (b ? `; [${b.en}] ${demo}` : '');
+    else addr = `[${[OTH[i % 4], a.en, ...(b ? [b.en] : [])].join('; ')}] ${demo}`;
+    recs.push({ 'UT (Unique WOS ID)': 'WOS:DEMO' + String(i + 1).padStart(6, '0'), 'Author Full Names': names.join('; '), 'Addresses': addr, 'Article Title': `Demo record ${i + 1}: illustrative study of ${topics[i % 6]}`, 'Source Title': j[0], 'Document Type': i % 9 === 8 ? 'Review' : 'Article', 'Publication Year': '2025', 'ISSN': j[1], 'eISSN': j[2], 'DOI': '' });
+  }
+  return { teachers: T, file: { name: '範例資料（虛構）', n: recs.length, expected: recs.length, missing: [], at: new Date().toISOString(), recs } };
+}
+function condsList() {
+  const inc = S.teachers.filter(t => t.include && t.en).length; const dv = Object.values(S.decisions); const yes = dv.filter(v => v === 'yes').length, no = dv.filter(v => v === 'no').length; const todo = todoCount();
+  const files = S.files.map(f => `${f.name} ｜ ${f.n} 筆${f.at ? ' ｜ ' + new Date(f.at).toLocaleDateString() : ''}`);
+  return [
+    ['單位', `${S.cfg.org}　${S.cfg.college}`], ['出版年度', String(S.cfg.year)], ['文獻類型', S.cfg.docTypes.join('、')],
+    ['教師名單', `共 ${S.teachers.length} 位，納入檢索（有英文姓名）${inc} 位`],
+    ['論文資料來源', files.join('；') || '—'],
+    ['本校地址判定規則', S.cfg.aff || '—'],
+    ['人工審核', `已標記 ${dv.length} 筆（本人 ${yes}、非本人 ${no}），尚待審核 ${todo} 筆`],
+    ['未審核項目的預設規則', '確定掛本校：採計；疑似漏掛：採計；無法判定：不採計；同名他人：不採計'],
+    ['同名同姓處理', '系統依英文姓名寫法與論文地址比對，無法區分同名同姓者，需由人工審核確認'],
+    ['重複論文', '同一篇論文以 WoS 的 UT 編號去重；一篇有多位本院教師時，教師個別計算，總篇數不重複'],
+    ['期刊品質資料', S.jcrExtraInfo ? S.jcrExtraInfo + '（已匯入，優先於內建資料）' : (window.JCR_BUILTIN_INFO || '') + '（內建，非官方）'],
+    ['報表產生時間', new Date().toLocaleString()]
+  ];
+}
+function condsText() { const T = x => window.I18N ? I18N.t(x) : x; const sep = I18N.lang === 'zh-TW' ? '：' : ': '; return T(S.cfg.college + ' ' + S.cfg.year + ' 計算條件與資料來源') + '\r\n\r\n' + condsList().map(([k, v]) => `${T(k)}${sep}${T(v)}`).join('\r\n') + '\r\n\r\n' + T('免責聲明：本工具的計算結果僅依上列條件與所匯入資料產生，未經人工審核者依預設規則計算，正式使用前請自行查核。') + (I18N.lang === 'zh-TW' ? '' : '\r\n' + T('免責聲明：本介面的英文、日文、韓文與西班牙文譯文由 AI 協助產生，尚未經母語人士審閱，僅供參考，不保證完全準確；與繁體中文原文有出入時，以繁體中文為準。教師姓名、系所、期刊名稱與統計數字為原始資料與計算結果，不受翻譯影響。')); }
+function sampleRows(n, seed) {
+  let x = seed >>> 0 || 1; const rnd = () => (x = (x * 1664525 + 1013904223) >>> 0) / 4294967296;
+  const a = ROWS.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a.slice(0, n);
+}
+const fname = s => `${S.cfg.college}_${S.cfg.year}_${window.I18N ? I18N.t(s).replace(/\s+/g, '_') : s}.csv`;
+const ACT = {
+  load: async () => { const [f] = await pick('.json'); if (!f) return; try { const o = JSON.parse(await f.text()); if (!o.cfg || !o.teachers) throw new Error('格式不符'); S = Object.assign(blank(), o); recompute(); save(); render(); toast('已開啟專案檔'); } catch (e) { fail('無法開啟：' + e.message); } },
+  save: () => download(`論文盤點專案_${S.cfg.college}_${S.cfg.year}.json`, JSON.stringify(S), 'application/json'),
+  mdRoster: () => download(`給AI_整理教師名單_${S.cfg.college}.md`, mdRoster()), copyRoster: () => copy(mdRoster()),
+  mdEnglish: () => download(`給AI_查英文姓名_${S.cfg.college}.md`, mdEnglish()),
+  mdWoS: () => download(`給AI_WoS檢索匯出_${S.cfg.college}_${S.cfg.year}.md`, mdWoS()), copyWoS: () => copy(mdWoS()),
+  tpl: () => download('教師名單範本.csv', '﻿學院,系所/學科,職稱,中文姓名,英文姓名,可信度,備註\r\n' + S.cfg.college + ',醫學系／生理學科,教授,王小明,"Wang, Hsiao-Ming",高-官方,\r\n'),
+  pickRoster: async () => { const f = await pick('.csv,.xls,.xlsx,.txt'); f.length && importRoster(f); },
+  pasteRoster: () => { const t = $('#paste').value.trim(); if (!t) return; try { const r = Core.rosterFromTable(Core.parseDelimited(t)); if (!r.length) throw new Error('沒有讀到任何教師'); S.teachers = r; S.decisions = {}; recompute(); save(); render(); toast(`已匯入 ${r.length} 位教師`); } catch (e) { fail(e.message); } },
+  pickEnglish: async () => { const f = await pick('.csv,.xls,.xlsx,.txt'); f.length && importEnglish(f); },
+  pickWoS: async () => { const f = await pick('.xls,.xlsx,.csv,.txt', true); f.length && importWoS(f); },
+  pickJCR: async () => { const f = await pick('.csv,.xls,.xlsx,.txt', true); f.length && importJCR(f); },
+  clearJCR: () => { S.jcrExtra = {}; S.jcrExtraInfo = ''; save(); render(); },
+  expSum: () => { const s = Core.summarize(S.teachers, ROWS, S.decisions, JCR()).sort((a, b) => a['系所/學科'].localeCompare(b['系所/學科']) || b['採計篇數'] - a['採計篇數']); download(fname('每位老師彙總'), Core.toCSV(s, Object.keys(s[0] || {}))); },
+  expRows: () => { const r = rowsExport(); download(fname('逐篇清單'), Core.toCSV(r, Object.keys(r[0] || {}))); },
+  expJournals: () => { const J = JCR(); const m = {}; ROWS.filter(r => Core.counted(r, S.decisions)).forEach(r => { const q = Core.jcrLookup(r, J) || [null, '', '']; (m[r.journal] || (m[r.journal] = { '期刊': r.journal, 'JIF': q[0] ?? '', 'JCR分區': q[1], '中科院分區': q[2], 'ISSN': r.issn, 'eISSN': r.eissn, '採計篇次': 0 }))['採計篇次']++; });
+    const L = Object.values(m).sort((a, b) => b['採計篇次'] - a['採計篇次']); download(fname('期刊對照表'), Core.toCSV(L, ['期刊', 'JIF', 'JCR分區', '中科院分區', 'ISSN', 'eISSN', '採計篇次'])); },
+  print: () => { if (!DESKTOP) return window.print(); const html = '<!DOCTYPE html><html lang="zh-Hant" data-lang="' + (window.I18N ? I18N.lang : 'zh-TW') + '"><head><meta charset="utf-8"><title>' + esc(I18N.t(S.cfg.college + ' ' + S.cfg.year + ' 年度論文統計')) + '</title>' + document.querySelector('style').outerHTML + '<style>body{background:#fff}main{max-width:none;padding:16px}</style></head><body><main>' + $('#main').innerHTML + '</main><script>onload=function(){setTimeout(function(){print()},300)}<\/script></body></html>'; window.pywebview.api.open_print(html).then(() => toast('已在瀏覽器開啟報表，請從列印視窗輸出')); },
+  sample: () => { if ((S.teachers.length || S.files.length) && !confirm('載入範例資料會取代目前的名單與論文資料。確定要繼續嗎？建議先儲存專案檔。')) return; const d = buildSample(); S = Object.assign(blank(), { step: 1, sample: true, teachers: d.teachers, files: [d.file], decisions: {} }); S.cfg = Object.assign(blank().cfg, { org: '示範大學', college: '示範學院', year: 2025, aff: 'Demo Univ', mode: 'web' }); reviewFilter = { tid: '', mode: 'todo' }; rvIdx = 0; recompute(); save(); render(); toast('已載入範例資料，請從左側逐步檢視'); },
+  expConds: () => download(fname('計算條件').replace(/\.csv$/, '.txt'), '\ufeff' + condsText()),
+  expCheck: () => { const seed = +S.cfg.year || 1; const L = sampleRows(50, seed); const J = JCR(); const rows = L.map((r, i) => { const t = tById(r.tid); const q = Core.jcrLookup(r, J) || [null, '', '']; return { '序號': i + 1, '教師': t.zh, '系所': t.dept, '論文標題': r.title, '期刊': r.journal, '年份': r.year, 'DOI': r.doi || '', '論文上的作者寫法': r.wosName, '作者單位（WoS）': r.aff, '系統分類': TIER_SHORT[r.tier], '是否採計': Core.counted(r, S.decisions) ? '採計' : '不採計', 'JCR分區': q[1], '查核：系統判定是否正確（對／錯）': '', '查核：備註': '' }; });
+    download(fname('抽查表') , Core.toCSV(rows, Object.keys(rows[0] || { '序號': 1 }))); toast(`已匯出 ${rows.length} 筆抽查表（隨機種子 ${seed}，同一份資料每次相同）`); },
+  dismiss: () => { ERR = ''; render(); },
+  keySave: async () => { const v = ($('#apiKeyIn') || {}).value || ''; if (!v.trim()) return toast('請先貼上 API Key'); toast('正在驗證 API Key…'); const r = await window.pywebview.api.save_key(v); if (r.ok) { KEYSTAT = await window.pywebview.api.key_status(); ERR = ''; render(); toast(r.message || 'API Key 驗證通過並已儲存'); } else fail(r.message); },
+  keyCheck: async () => { toast('正在驗證 API Key…'); const r = await window.pywebview.api.check_key(); if (r.ok) toast('API Key 有效（' + r.version + '）'); else fail(r.message); },
+  keyClear: async () => { if (!confirm('確定要清除已儲存的 API Key 嗎？')) return; await window.pywebview.api.clear_key(); KEYSTAT = await window.pywebview.api.key_status(); render(); toast('已清除 API Key'); },
+  apiRun: () => desktopFetch(), apiFresh: () => desktopFetch(true),
+  apiCancel: () => { if (FETCH) FETCH.cancel = true; },
+  apiMac: () => { const o = { year: S.cfg.year, college: S.cfg.college, edition: S.cfg.apiEdition }; download(`WoS_API取得程式_${S.cfg.college}_${S.cfg.year}_Mac.sh`, Core.apiScriptMac(apiQueries(), o)); },
+  apiWin: () => { const o = { year: S.cfg.year, college: S.cfg.college, edition: S.cfg.apiEdition }; download(`WoS_API取得程式_${S.cfg.college}_${S.cfg.year}_Windows.ps1`, '\ufeff' + Core.apiScriptWin(apiQueries(), o).replace(/\r?\n/g, '\r\n')); }
+};
+
+/* ---------- 事件 ---------- */
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-go]'); if (g && !g.disabled) return go(+g.dataset.go);
+  const a = e.target.closest('[data-act]'); if (a && ACT[a.dataset.act]) return ACT[a.dataset.act]();
+  const cq = e.target.closest('[data-copyq]'); if (cq) return copy(queries()[+cq.dataset.copyq - 1].query);
+  const rm = e.target.closest('[data-rmfile]'); if (rm) { const f = S.files.splice(+rm.dataset.rmfile, 1)[0]; recompute(); save(); render(); return toast('已移除 ' + f.name); }
+  const wm = e.target.closest('[data-wmode]'); if (wm) { S.cfg.mode = wm.dataset.wmode; save(); return render(); }
+  const md = e.target.closest('[data-mode]'); if (md) { reviewFilter.mode = md.dataset.mode; return render(); }
+  const bk = e.target.closest('[data-bulk]'); if (bk) { const L = reviewList().filter(r => !S.decisions[r.id]); if (!L.length) return; const lab = bk.dataset.bulk === 'yes' ? '本人' : '非本人'; if (!confirm(`確定要將目前列表中尚未標記的 ${L.length} 筆全部標為「${lab}」嗎？之後仍可逐筆更正。`)) return; L.forEach(r => S.decisions[r.id] = bk.dataset.bulk); save(); render(); return toast(`已標記 ${L.length} 筆`); }
+  const d = e.target.closest('[data-dec]'); if (d) { const tr = d.closest('tr'); if (tr) rvIdx = +tr.dataset.ri || 0; return decide(d.dataset.id, d.dataset.dec); }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'cOrg') S.cfg.org = t.value; else if (t.id === 'cCollege') S.cfg.college = t.value; else if (t.id === 'cYear') S.cfg.year = +t.value || S.cfg.year;
+  else if (t.id === 'cApiOrg') { S.cfg.apiOrg = t.value.trim(); render(); }
+  else if (t.id === 'cApiEd') { S.cfg.apiEdition = t.value.trim(); }
+  else if (t.id === 'cGroup') S.cfg.groupSize = Math.max(5, Math.min(60, +t.value || 40));
+  else if (t.id === 'cAff') { try { new RegExp(t.value); S.cfg.aff = t.value; recompute(); } catch (x) { toast('判定規則格式有誤，已保留原設定'); t.value = S.cfg.aff; } }
+  else if (t.id === 'cAffPreset' && t.value) { S.cfg.aff = AFF_PRESETS[t.value]; recompute(); render(); }
+  else if (t.classList.contains('cDT')) S.cfg.docTypes = [...document.querySelectorAll('.cDT:checked')].map(x => x.value);
+  else if (t.classList.contains('tInc')) { tById(t.dataset.id).include = t.checked; recompute(); }
+  else if (t.classList.contains('tEn')) { const x = tById(t.dataset.id); x.en = t.value.trim(); x.include = !!x.en; const vc = document.querySelector(`[data-var="${x.id}"]`); if (vc) vc.textContent = Core.nameVariants(x.en).join('；'); const cb = document.querySelector(`.tInc[data-id="${x.id}"]`); if (cb) { cb.disabled = !x.en; cb.checked = x.include; } recompute(); }
+  else if (t.id === 'rvT') { reviewFilter.tid = t.value; render(); }
+  save(); renderNav(); renderBar();
+});
+let dragN = 0;
+window.addEventListener('dragenter', e => { e.preventDefault(); if (dropHandlers[S.step]) { dragN++; document.body.classList.add('dragging'); } });
+window.addEventListener('dragleave', () => { if (--dragN <= 0) { dragN = 0; document.body.classList.remove('dragging'); } });
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('drop', e => { e.preventDefault(); dragN = 0; document.body.classList.remove('dragging'); const fs = [...(e.dataTransfer.files || [])]; if (!fs.length) return; const h = dropHandlers[S.step]; if (!h) return toast('此步驟不需匯入檔案'); h(fs); });
+$('#btnSave').onclick = () => ACT.save(); $('#btnLoad').onclick = () => ACT.load();
+$('#btnReset').onclick = () => { if (!confirm('確定要清除所有資料嗎？\n此動作無法復原。建議先儲存專案檔備份。')) return; S = blank(); ROWS = []; REC = []; save(); render(); };
+(async () => { try { const s = await DB.get(); if (s) { S = Object.assign(blank(), JSON.parse(s)); delete S.records; S.cfg = Object.assign(blank().cfg, S.cfg); $('#saveState').textContent = '已載入上次進度'; } } catch (e) {} recompute(); render(); })();
+
+document.addEventListener('keydown', e => {
+  if (S.step === 6 && !e.metaKey && !e.ctrlKey && !e.altKey && !document.querySelector('dialog[open]') && !/^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test((e.target.tagName || ''))) {
+    const L = reviewList().slice(0, 300); const k = e.key.toLowerCase();
+    if (L.length && ['arrowdown', 'j', 'arrowup', 'k', 'y', 'n', 'u'].includes(k)) {
+      e.preventDefault();
+      if (k === 'arrowdown' || k === 'j') { rvIdx = Math.min(L.length - 1, rvIdx + 1); render(); const f = document.querySelector('tr.rvf'); if (f) f.scrollIntoView({ block: 'nearest' }); }
+      else if (k === 'arrowup' || k === 'k') { rvIdx = Math.max(0, rvIdx - 1); render(); const f = document.querySelector('tr.rvf'); if (f) f.scrollIntoView({ block: 'nearest' }); }
+      else { const r = L[Math.min(rvIdx, L.length - 1)]; decide(r.id, k === 'y' ? 'yes' : k === 'n' ? 'no' : ''); if (reviewFilter.mode !== 'todo' && k !== 'u') { rvIdx = Math.min(L.length - 1, rvIdx + 1); render(); } }
+      return;
+    }
+  }
+  const mod = IS_MAC ? e.metaKey : e.ctrlKey; if (!mod) return;
+  const k = e.key.toLowerCase();
+  if (k === 's') { e.preventDefault(); ACT.save(); }
+  else if (k === 'o') { e.preventDefault(); ACT.load(); }
+  else if (k === 'enter') { const b = document.querySelector('#actionbar .btn.primary[data-go]'); if (b && !b.disabled) { e.preventDefault(); b.click(); } }
+});
+$('#kS').textContent = MOD + 'S'; $('#kO').textContent = MOD + 'O';
+
+/* ---------- 說明與常見問題 ---------- */
+window.HELP = {"manual": [{"t": "概述", "b": "<p>「教師論文盤點工具」用於統計指定單位教師在某一年度、收錄於 Web of Science（WoS）Core Collection 的期刊論文篇數，並依期刊的 JIF 與 JCR 分區（Q1–Q4）呈現論文品質。</p><p>工具為桌面應用程式，提供 Mac（.dmg）與 Windows（.exe）兩個版本，操作方式完全相同。不需帳號，所有資料只存在本機；已申請 WoS Starter API Key 者可直接在工具內取得論文資料，不需開啟終端機或處理任何程式。</p><p>整體流程分為八個步驟：盤點範圍 → 教師名單 → 英文姓名 → WoS 資料 → 比對結果 → 期刊品質 → 人工審核 → 報表。</p><p>製作：醫資三甲 江桂宏、醫學二乙 葉睿穎。</p>"}, {"t": "安裝與開啟", "b": "<p>從雲端硬碟下載符合電腦的安裝檔：</p><ul><li><b>Windows 10／11</b>：「教師論文盤點工具_安裝程式.exe」。</li><li><b>Mac（Apple 晶片，M1 以後）</b>：「教師論文盤點工具_Mac_AppleSilicon.dmg」。</li><li><b>Mac（Intel 處理器）</b>：「教師論文盤點工具_Mac_Intel.dmg」。</li></ul><p>不確定 Mac 的晶片：按左上角蘋果選單 →「關於這台 Mac」，「晶片」顯示 Apple M 開頭者選 Apple 晶片版，顯示「處理器 Intel」者選 Intel 版。</p><p><b>Mac 安裝</b></p><ol><li>雙擊 .dmg 檔，在出現的視窗中將「教師論文盤點工具」拖到「Applications（應用程式）」資料夾。</li><li>到「應用程式」資料夾，在「教師論文盤點工具」上<b>按右鍵 →「打開」</b>，在對話框再按一次「打開」。</li><li>若仍顯示無法打開：開啟「系統設定 → 隱私權與安全性」，捲到最下方，在「教師論文盤點工具」旁按「仍要打開」，輸入登入密碼。</li><li>之後雙擊即可開啟，不會再出現提示。可退出（推出）桌面上的 .dmg 磁碟。</li></ol><p><b>Windows 安裝</b></p><ol><li>雙擊「教師論文盤點工具_安裝程式.exe」。若出現藍色的「Windows 已保護您的電腦」，按「<b>其他資訊</b>」→「<b>仍要執行</b>」。</li><li>依安裝精靈按「下一步」，可勾選「在桌面建立捷徑」，最後按「安裝」。安裝於個人帳號下，不需要系統管理員權限。</li><li>完成後從「開始」功能表或桌面捷徑開啟「教師論文盤點工具」。</li></ol><p><b>若 Windows 安全性仍攔截</b>：開啟「設定 → 隱私權與安全性 → Windows 安全性 → 病毒與威脅防護 → 保護歷程記錄」，點選被封鎖的「教師論文盤點工具」項目 →「動作」→「允許」，再重新執行安裝程式。學校統一管理的電腦若無法允許，請洽資訊中心。</p><p>出現上述提示是因為本工具未向 Apple 與 Microsoft 付費取得開發者簽章，並非偵測到病毒。請只從本單位提供的雲端硬碟下載安裝檔。</p><p>Windows 版使用系統內建的 Microsoft Edge WebView2 顯示畫面，Windows 11 已內建；Windows 10 若畫面空白，請參閱常見問題。</p>"}, {"t": "步驟 1　盤點範圍", "b": "<p>填寫學校、學院或單位、出版年度，並勾選採計的文獻類型。教師評鑑一般僅採計 Article 與 Review。</p><p>「本校地址判定規則」用來判斷作者是否隸屬本校，預設為中國醫藥大學在 WoS 的常見寫法（China Med Univ、China Medical University、China Med Coll）。其他學校請改成該校在 WoS 地址欄的寫法，多種寫法以「|」分隔。</p><p>若先前已有專案，可按「開啟專案檔…」接續作業。</p>"}, {"t": "步驟 2　教師名單", "b": "<p>匯入教師名單（.xlsx、.xls、.csv 皆可）。第一列須為欄位名稱，至少包含「中文姓名」，建議另含「學院」「系所/學科」「職稱」「英文姓名」「備註」。</p><p><b>尚無名單時</b>，有三種方式：</p><ol><li><b>由 AI 助理整理</b>：下載說明文件，提供給 ChatGPT、Claude、Gemini 等 AI 助理，請其依學校官方網頁整理，產出 CSV 後匯入。</li><li><b>填寫範本</b>：下載範本，以 Excel 填寫後匯入。</li><li><b>從試算表貼上</b>：於 Excel 選取含欄位名稱的表格，拷貝後貼入文字框。</li></ol><p>重新匯入會取代現有名單，並清除已完成的審核結果。</p>"}, {"t": "步驟 3　英文姓名", "b": "<p>WoS 以英文姓名檢索，此步驟確認每位教師的英文姓名，並決定是否納入檢索。</p><ul><li>系統自動產生常見寫法，例如「Wang, Hsiao-Ming」「Wang, Hsiaoming」「Hsiao-Ming, Wang」，可於「檢索寫法」欄查看。</li><li>缺少英文姓名者，可下載說明文件交由 AI 助理查詢官方英文姓名，取得「英文姓名_補查.csv」後匯入，系統會依中文姓名自動補上。</li><li>可直接在表格中修改英文姓名。</li><li>同名風險高或姓名不確定者，可關閉「納入」開關，暫不檢索。</li></ul>"}, {"t": "申請 WoS 個人帳號與 Starter API（學生）", "b": "<p>以下以中國醫藥大學學生為例。請使用學校核發的學生信箱（學校的 Google 帳號），不要使用個人 Gmail；機構方案會依信箱網域確認身分。</p><p><b>一、申請 Web of Science 個人帳號</b></p><ol><li>連上校內網路（校外請先連線學校 VPN），建議使用 Chrome。學校的 WoS 採 IP 認證，首次註冊須在校內 IP 完成。</li><li>由學校圖書館電子資料庫頁面進入 Web of Science（www.webofscience.com），確認畫面顯示可使用（已由學校認證）。</li><li>按右上角「登入」→「註冊」。</li><li>輸入學生信箱並設定密碼；或選擇「以 Google 帳號登入」並選取學生信箱的 Google 帳號。</li><li>到學生信箱收取 Clarivate 驗證信，點擊連結完成驗證，再填寫姓名等基本資料。</li><li>若出現「No document suggestions found」（找不到可認領的論文），直接略過即可，這是給已有發表者認領論文用的。</li><li>之後在手機 App（如 Research Assistant）使用時，以同一帳號登入。</li></ol><p><b>二、申請 Web of Science Starter API（Free Institutional Member Plan）</b></p><ol><li>前往 developer.clarivate.com，按右上角「Sign up」，以<b>同一個學生信箱</b>註冊 Developer Portal 帳號（建議在校內網路操作），完成信箱驗證後登入。</li><li>右上角帳號 →「Applications」→「Create Application」，填寫：<br>Application ID：<code>cmu-med-pub-audit</code>（僅限小寫英文、數字、-、_）<br>Application Name：<code>CMU College of Medicine Faculty Publication Audit</code><br>Application Description：簡述為中國醫藥大學醫學院內部、非商業的教師年度論文盤點，低頻使用、不對外散布。<br>Client Type：選「Public: Single Page Application」；不要勾選 OAuth2.0 Flows。</li><li>上方選單「APIs」→ 點選「Web of Science Starter API」→「Subscribe」。</li><li>選擇剛建立的 Application，方案選「<b>Free Institutional Member Plan</b>」（機構成員方案，每秒 5 次、每日 5,000 次），送出申請。<br>不要選 Free Trial Plan（僅限個人用途）或 Free Institutional Integration Plan（全校僅一把，供典藏系統串接）。</li><li>等待 Clarivate 審核（數個工作天），核准通知會寄到學生信箱。</li><li>核准後回到「Applications」→ 您的 Application，確認 Starter API 狀態為 Approved，複製「API Key」。每位成員僅能申請一把 Key。</li><li>API Key 等同密碼：不要貼到對話、Email 或共用文件；只需在工具步驟 4 貼上一次，工具會存入系統鑰匙圈（Windows 為認證管理員）。</li></ol><p>若申請被退回或要求由學校申請，請洽圖書館電子資源窗口，說明用途為醫學院教師論文盤點。</p>"}, {"t": "使用 WoS API 自動取得（選用）", "b": "<p>已申請 Web of Science Starter API Key 者，可於步驟 4 切換為「API 自動取得」，由工具直接連線取得資料，不需逐組在網頁匯出。</p><ol><li><b>切換模式</b>：步驟 4 上方選擇「API 自動取得」。</li><li><b>確認檢索設定</b>：機構名稱預設為「China Medical University Taiwan」（已實測可用），應與 WoS 網頁「分析結果 → 機構（Organizations-Enhanced）」的寫法一致；收錄範圍預設為本校訂閱的 SCIE 與 SSCI。</li><li><b>輸入 API Key</b>：在「API Key」欄貼上 Key，按「<b>儲存並驗證</b>」。工具會先向 Clarivate 確認 Key 有效（自動去除前後空白），通過後存入 Mac 的「鑰匙圈」或 Windows 的「認證管理員」，之後開啟工具不需再輸入。未通過時會以中文說明原因。</li><li><b>取得資料</b>：按「<b>開始取得資料</b>」，畫面顯示進度（第幾組、第幾頁）。全醫學院約需數分鐘；可隨時按「停止」，停止時不會匯入任何資料。</li><li><b>完成</b>：資料自動匯入，下方顯示篇數，按「繼續」進入比對結果。名單或設定變更後，按「重新取得資料」即可。</li></ol><p><b>管理 API Key</b>：已設定時可按「重新驗證」確認仍有效；按「清除」會從系統鑰匙圈刪除；在欄位貼上新的 Key 再按「儲存並驗證」即可更換。工具不會把 Key 顯示在畫面上，也不會寫入專案檔。</p><p><b>使用限制</b>：Free Institutional Member Plan 每秒 5 次、每日 5,000 次請求，工具已自動控制速度；超過時會等待後重試。每位成員僅能申請一把 Key，請勿共用他人的 Key。</p><p><b>與網頁匯出的差異</b>：Starter API 不提供作者地址，因此檢索時以機構條件限定本校，回傳的論文皆標示為「機構相符（API）」並採計，無法再細分「確定掛本校」與「疑似漏掛」；同名他人多已在檢索階段排除。若需逐篇判斷作者本人是否掛本校，請使用網頁匯出（Full Record）。</p>"}, {"t": "步驟 4　WoS 資料（網頁匯出）", "b": "<p>系統依名單產生檢索式（每組最多 40 位教師），需由具 Web of Science 使用權限者檢索並匯出。</p><ol><li>於瀏覽器登入 Web of Science（校內網路、VPN 或機構登入）。</li><li>按「下載說明文件」，可交給能操作瀏覽器的 AI 助理（如 Claude in Chrome、ChatGPT agent）代為執行，亦可依文件自行操作。</li><li>每組：Advanced Search 貼上檢索式 → Export → Excel → Record Content 選 <b>Full Record</b> → 匯出。單次最多 1,000 筆。</li><li>建議檔名為 <code>author_group組號_筆數.xls</code>，系統會依檔名中的筆數核對是否完整。</li><li>將所有匯出檔拖曳至匯入區（.xls、.xlsx、.csv、WoS Tab-delimited .txt 皆可，可一次多個）。</li></ol><p>匯入後，系統會檢查欄位是否齊全、筆數是否與檔名相符，並合併去除重複。</p>"}, {"t": "步驟 5　比對結果", "b": "<p>系統以作者英文全名比對名單，再依該作者在該篇論文的地址分為四類：</p><ul><li><b>確定掛本校</b>：作者本人地址含本校，採計。</li><li><b>疑似漏掛</b>：作者本人地址未含本校，但同篇其他作者含本校。可能為漏掛，也可能為同名者，預設採計，建議抽查。</li><li><b>同名他人</b>：全篇未出現本校，多為同名同姓的他人，預設不採計。</li><li><b>無法判定</b>：WoS 地址無法對應至該作者，預設不採計，需審核。</li></ul><p>頁面下方列出無相符紀錄的教師，可能是當年度無論文，或英文姓名寫法不同。</p>"}, {"t": "步驟 6　期刊品質", "b": "<p>系統以每篇論文的 ISSN／eISSN 對照期刊資料，補上 JIF 與 JCR 分區。</p><p>內建資料取自 GitHub「suqingdong/impact_factor」整理之 2025 年 JIF 與分區，屬非官方資料。正式報告建議匯入學校 JCR 官方匯出檔：於 JCR 網站依學科篩選後匯出 CSV 或 Excel（單次最多 600 筆，可分次匯出後一併匯入），匯入的資料會優先於內建資料。</p><p>多學科期刊在 JCR 中可能有多個分區；內建資料每本期刊僅存一個分區，如需依特定學科判定，請以官方資料為準。</p><p>匯入的 JCR 檔須包含 ISSN／eISSN 與 JIF 或 JIF Quartile 欄位；缺少這些欄位的檔案會被拒絕，避免空白資料覆蓋內建資料。</p>"}, {"t": "步驟 7　人工審核", "b": "<p>系統無法區分同名同姓，請由熟悉教師研究領域者確認論文是否為本人著作。</p><ul><li>上方分段控制可切換：待審核、疑似與無法判定、同名他人、已審核、全部。</li><li>右上方可依教師篩選。</li><li>每筆按「本人」或「非本人」；再按一次可取消。</li><li>「本人」一律採計，「非本人」一律不採計，未審核者依預設規則。</li><li>可點 DOI 連結查看原文以協助判斷。</li></ul>"}, {"t": "步驟 8　報表", "b": "<p>顯示全單位統計與每位教師的明細，可匯出：</p><ul><li><b>教師彙總表</b>：每位教師的採計篇數、Q1–Q4 篇數、Q1+Q2 占比、平均／最高 JIF、待審核筆數等。</li><li><b>逐篇清單</b>：每筆教師與論文的比對結果、分類、審核結果、期刊品質與 DOI。</li><li><b>期刊對照表</b>：採計論文涉及的期刊、JIF、分區與篇次。</li></ul><p>檔案為 CSV，可直接以 Excel 開啟。亦可按「列印…」輸出 PDF：工具會以預設瀏覽器開啟報表並跳出列印視窗，選擇「儲存為 PDF」即可。報表會自動以 A4 橫式排版，並於頁尾註明資料範圍、資料來源與期刊品質資料來源。</p>"}, {"t": "報表欄位說明", "b": "<ul><li><b>採計篇數</b>：該教師採計的不重複論文數。</li><li><b>其中確定掛本校／人工確認／疑似漏掛未審</b>：採計篇數的組成。</li><li><b>Q1–Q4、無分區/查無</b>：採計論文所屬期刊的 JCR 分區篇數。</li><li><b>Q1+Q2占比</b>：(Q1+Q2)／採計篇數。</li><li><b>平均JIF、最高JIF、JIF總和</b>：以有 JIF 的採計論文計算。</li><li><b>未採計(同名/排除)</b>：比對到但不採計的筆數。</li><li><b>待審核</b>：疑似漏掛與無法判定中尚未審核的筆數。</li><li><b>篇次</b>：同一篇論文有多位本單位教師時，各計一次；單位層級的「採計論文（不重複）」已去除重複。</li></ul>"}, {"t": "資料儲存與專案檔", "b": "<p>所有資料只存在本機，不會上傳。工具會自動保存進度，下次開啟時接續；資料位置為 Mac「~/資料庫/Application Support/TeacherPubAudit」、Windows「%LOCALAPPDATA%\\TeacherPubAudit」。</p><p>自動保存僅限同一台電腦，且移除工具或清理系統時可能遺失。請定期按「儲存專案檔…」（⌘S／Ctrl+S）選擇位置存成 .json 檔，日後以「開啟專案檔…」（⌘O／Ctrl+O）接續，也可在 Mac 與 Windows 之間互通。專案檔包含名單、WoS 資料、審核結果與設定，<b>不含</b> API Key。</p><p>使用 API 時，工具只會把檢索式（教師英文姓名、年度、機構名稱）送到 Clarivate；名單中的其他欄位與審核結果不會離開本機。</p>"}, {"t": "多人審核建議流程", "b": "<ol><li>負責人完成步驟 1–6 後儲存專案檔。</li><li>將專案檔交給審核者（建議以雲端硬碟分享）。</li><li>審核者開啟專案檔，於步驟 7 完成審核後儲存，交回負責人。</li></ol><p>工具不支援合併多份專案檔的審核結果，建議依序傳遞同一份專案檔，或依系所分工後由負責人彙整。</p>"}, {"t": "更新與移除", "b": "<p><b>更新版本</b>：下載新的安裝檔，Mac 拖到「應用程式」並選擇「取代」，Windows 直接執行新的安裝程式，會覆蓋舊版。API Key 與自動保存的進度會保留；更新前仍建議先儲存專案檔。</p><p><b>移除</b></p><ol><li>先在步驟 4 按 API Key 旁的「清除」，從系統鑰匙圈刪除 Key。</li><li>Mac：將「應用程式」中的工具拖到垃圾桶；如需一併刪除進度，刪除「~/資料庫/Application Support/TeacherPubAudit」資料夾。</li><li>Windows：「設定 → 應用程式 → 已安裝的應用程式」找到「教師論文盤點工具」→「解除安裝」；如需一併刪除進度，刪除「%LOCALAPPDATA%\\TeacherPubAudit」資料夾。</li></ol><p>若已先刪除工具才想刪 Key：Mac 開啟「鑰匙圈存取」搜尋「cmu-teacher-pub-audit」刪除；Windows 開啟「認證管理員 → Windows 認證」，刪除名稱含「cmu-teacher-pub-audit」的項目。</p>"}, {"t": "鍵盤快速鍵", "b": "<ul><li>儲存專案檔：⌘S（Windows：Ctrl+S）</li><li>開啟專案檔：⌘O（Windows：Ctrl+O）</li><li>繼續下一步：⌘Return（Windows：Ctrl+Enter）</li><li>開啟說明：⌘?（Windows：Ctrl+?）或 F1</li></ul>"}, {"t": "注意事項", "b": "<ul><li><b>資料庫使用規範</b>：WoS 匯出請由具權限之使用者在自己的瀏覽器少量進行，遵守學校資料庫使用規範，避免短時間大量重複下載。</li><li><b>期刊品質資料</b>：內建資料為非官方整理、未標示授權，正式報告請以 JCR 官方資料為準。</li><li><b>同名同姓</b>：比對僅依英文全名，疑似漏掛與無法判定須經人工審核。</li><li><b>統計口徑</b>：僅計 WoS Core Collection、指定年度與文獻類型；與其他資料庫（Scopus、Google Scholar）或學校系統的數字可能不同。</li></ul>"}, {"t": "網頁版（備用）", "b": "<p>無法安裝桌面版的電腦，可改用網頁版「教師論文盤點工具.html」，以 Chrome、Edge 或 Safari 開啟，八個步驟與桌面版相同，資料存於該瀏覽器。</p><p>差異只在 API：瀏覽器安全限制（CORS）不允許網頁直接連線 Clarivate，因此網頁版的「API 自動取得」需下載取得程式在本機執行：</p><ol><li>步驟 4 按「下載 Mac 版」或「下載 Windows 版」取得程式（已含檢索式，名單或設定變更後須重新下載）。</li><li>Mac：開啟「終端機」，輸入 <code>bash</code> 與一個空格，將程式拖入視窗後按 Return。Windows：於程式按右鍵 →「用 PowerShell 執行」。</li><li>依提示貼上 API Key（不顯示、不儲存），程式會先確認 Key 有效再取得資料。</li><li>完成後將同一資料夾的「WoS_API結果_單位_年度.txt」拖曳至步驟 4 匯入區。</li></ol><p>網頁匯出模式不受影響，網頁版與桌面版的專案檔可互相開啟。</p>"}, {"t": "關於本工具", "b": "<p><b>製作</b>：醫資三甲 江桂宏、醫學二乙 葉睿穎</p><p><b>版本</b>：2026 年 11 月 25 日版（Mac、Windows 桌面版）</p><p><b>資料來源</b>：論文資料取自 Clarivate Web of Science Core Collection；內建期刊品質資料取自 GitHub「suqingdong/impact_factor」，屬非官方整理，正式報告請以學校 JCR 官方資料為準。</p><p>本工具供中國醫藥大學醫學院內部盤點使用。</p>"}], "faq": [{"c": "帳號與 API 申請", "q": "一定要用學校信箱嗎？可以用個人 Gmail 嗎？", "a": "請使用學校核發的學生（或教職員）信箱。Free Institutional Member Plan 依信箱網域確認您是訂閱機構的成員，用個人 Gmail 通常無法通過審核。"}, {"c": "帳號與 API 申請", "q": "註冊 WoS 帳號時顯示無法使用或需要機構登入。", "a": "學校的 WoS 採 IP 認證，請先連上校內網路或學校 VPN，並從圖書館電子資料庫頁面進入 Web of Science 後再註冊。"}, {"c": "帳號與 API 申請", "q": "WoS 帳號和 Developer Portal 帳號是同一個嗎？", "a": "兩者是分開註冊的。建議兩邊都使用同一個學生信箱，方便管理與審核。"}, {"c": "帳號與 API 申請", "q": "Starter API 要選哪一個方案？", "a": "選 Free Institutional Member Plan（本校有訂閱 WoS，每人一把 Key，每日 5,000 次）。Free Trial Plan 僅限個人用途；Free Institutional Integration Plan 全校只有一把，供典藏系統或第三方串接使用。"}, {"c": "帳號與 API 申請", "q": "申請後一直顯示 Pending。", "a": "表示仍在 Clarivate 審核中，通常需要數個工作天。若超過兩週未核准，或收到退件通知，請洽圖書館電子資源窗口協助。"}, {"c": "帳號與 API 申請", "q": "Application 的欄位怎麼填？", "a": "Application ID 填 cmu-med-pub-audit（只能小寫英文、數字、-、_）；Name 填 CMU College of Medicine Faculty Publication Audit；Description 簡述為醫學院內部非商業的年度論文盤點；Client Type 選 Public: Single Page Application，不勾選 OAuth2.0 Flows。"}, {"c": "開啟與安裝", "q": "Mac 顯示「無法打開，因為無法驗證開發者」或「Apple 無法檢查是否含有惡意軟體」。", "a": "本工具未向 Apple 付費簽章，第一次開啟需手動允許：在「應用程式」中的工具按右鍵 →「打開」→「打開」。若仍被擋，到「系統設定 → 隱私權與安全性」最下方按「仍要打開」。允許一次後，之後雙擊即可開啟。"}, {"c": "開啟與安裝", "q": "Windows 出現「Windows 已保護您的電腦」。", "a": "這是 SmartScreen 對未簽章程式的提示。按「其他資訊」→「仍要執行」即可繼續安裝。"}, {"c": "開啟與安裝", "q": "我的 Mac 該下載哪一個 .dmg？", "a": "蘋果選單 →「關於這台 Mac」：「晶片」為 Apple M 開頭者下載 AppleSilicon 版，「處理器」為 Intel 者下載 Intel 版。下載錯版本時會無法開啟，換另一個即可。"}, {"c": "開啟與安裝", "q": "Windows 開啟後畫面空白。", "a": "Windows 版使用 Microsoft Edge WebView2 顯示畫面。Windows 11 已內建；Windows 10 請先執行 Windows Update，或至 Microsoft 官網下載安裝「WebView2 Runtime（Evergreen）」後重新開啟。"}, {"c": "開啟與安裝", "q": "Mac 版和 Windows 版的操作一樣嗎？", "a": "完全相同，只有快速鍵的修飾鍵不同（Mac 用 ⌘，Windows 用 Ctrl），API Key 分別存在 Mac 的鑰匙圈與 Windows 的認證管理員。專案檔可在兩個版本之間互通。"}, {"c": "開啟與安裝", "q": "需要網路嗎？", "a": "整理名單、比對、審核與報表都可離線進行。需要網路的只有：使用 API 取得資料、在瀏覽器登入 WoS 匯出，以及點選 DOI 查看原文。"}, {"c": "開啟與安裝", "q": "Windows 安全性顯示「偵測到威脅」或「可能包含病毒」，安裝程式被封鎖或刪除。", "a": "未付費簽章的新程式偶爾會被 Microsoft Defender 的自動判斷誤判。本工具每次編譯都會以最新病毒碼掃描並確認無威脅。請先確認檔案來自本單位的雲端硬碟，再開啟「設定 → 隱私權與安全性 → Windows 安全性 → 病毒與威脅防護 → 保護歷程記錄」，點選該項目 →「動作」→「允許」，然後重新下載並執行安裝程式。請勿關閉整個防毒功能。學校統一管理的電腦若無法允許，請洽資訊中心。"}, {"c": "開啟與安裝", "q": "用 Email 寄送安裝檔被退回或封鎖。", "a": "學校信箱通常會阻擋 .exe、.dmg 等執行檔。請改以雲端硬碟分享連結寄送。"}, {"c": "資料與儲存", "q": "重新開啟後，之前的資料不見了。", "a": "工具會自動保存進度並在下次開啟時接續。若資料不見，可能是換了電腦、使用網頁版時換了瀏覽器，或系統清理刪除了資料。請以「開啟專案檔…」載入先前儲存的 .json 檔，並養成按 ⌘S／Ctrl+S 儲存專案檔的習慣。"}, {"c": "資料與儲存", "q": "資料會被上傳到網路嗎？", "a": "不會。名單、比對與審核都在本機完成。使用 API 時，只有檢索式（教師英文姓名、年度、機構名稱）會送到 Clarivate；您自行下載說明文件交給 AI 助理時，內容（如教師姓名）才會提供給該 AI 服務，請依學校規範使用。"}, {"c": "資料與儲存", "q": "可以換一台電腦繼續做嗎？", "a": "可以。在原電腦儲存專案檔，複製到新電腦後以「開啟專案檔…」載入即可。"}, {"c": "資料與儲存", "q": "要盤點不同年度，該怎麼做？", "a": "建議每個年度各存一份專案檔。在步驟 1 修改年度後，需重新到 WoS 檢索匯出（檢索式中的年度會改變），再匯入新的檔案。"}, {"c": "名單與姓名", "q": "匯入名單時顯示「需要中文姓名欄位」。", "a": "名單第一列必須是欄位名稱，且需有一欄名為「中文姓名」或「姓名」。可下載範本對照格式。"}, {"c": "名單與姓名", "q": "用 Excel 開啟 CSV 出現亂碼。", "a": "工具匯出的 CSV 已加上 UTF-8 標記，一般可直接開啟。若仍亂碼，請於 Excel 使用「資料 → 從文字/CSV」匯入並選擇 UTF-8 編碼。"}, {"c": "名單與姓名", "q": "修改英文姓名後，需要重新到 WoS 匯出嗎？", "a": "需要。英文姓名會改變檢索式，請重新下載說明文件，至少重新匯出受影響的那一組，再匯入（同名檔案會自動取代）。"}, {"c": "名單與姓名", "q": "某位教師有好幾種英文姓名寫法怎麼辦？", "a": "系統會自動產生姓名順序與連字號的變體。若教師曾使用完全不同的拼法，目前請以其最常用的官方寫法為主；必要時可在名單中另列一列相同中文姓名、不同英文姓名的資料。"}, {"c": "WoS 匯出", "q": "匯入後顯示「筆數不符」。", "a": "檔名標示的筆數與實際讀到的筆數不同，表示匯出可能不完整（例如範圍沒有選 1 到 N）。請在 WoS 重新匯出該組。"}, {"c": "WoS 匯出", "q": "匯入後顯示「欄位不足」。", "a": "匯出時 Record Content 未選擇 Full Record。請在 WoS 重新匯出，並選擇 Full Record。"}, {"c": "WoS 匯出", "q": "某一組結果超過 1,000 筆。", "a": "WoS 單次最多匯出 1,000 筆。請分段匯出（1–1000、1001–2000…），每段各存一個檔案後一併匯入，系統會自動合併去除重複。"}, {"c": "WoS 匯出", "q": "下載的檔案沒有副檔名，或檔名很奇怪。", "a": "部分瀏覽器會將下載暫存為類似「.com.google.Chrome.xxxxxx」的檔名，內容仍是有效的 Excel 檔。請將檔名改為 author_group組號_筆數.xls 後再匯入。"}, {"c": "WoS 匯出", "q": "WoS 顯示檢索式錯誤或太長。", "a": "請確認貼上的檢索式完整，結尾包含「AND PY=年度 AND DT=(…)」。若仍過長，可在步驟 1「進階設定」將每組人數調小（例如 30），再重新下載說明文件。"}, {"c": "WoS 匯出", "q": "一定要用 AI 助理執行 WoS 檢索嗎？", "a": "不一定。說明文件同樣適合人工操作；AI 助理只是協助重複的點選與下載。無論何者，皆需使用者本人登入 WoS。"}, {"c": "比對與審核", "q": "有些教師顯示「無相符紀錄」。", "a": "可能是當年度確實沒有 WoS 論文，或 WoS 上的英文姓名寫法與名單不同。請確認英文姓名後，重新檢索該組。"}, {"c": "比對與審核", "q": "「同名他人」的筆數很多，正常嗎？", "a": "正常。常見姓名（例如 Lin, Yu-Ting）在 WoS 中有許多同名作者，這些論文全篇未出現本校，預設不採計，一般不需逐筆審核。"}, {"c": "比對與審核", "q": "「疑似漏掛」為什麼預設採計？", "a": "同篇其他作者有本校，代表很可能是本校合作論文，只是該作者未寫本校地址。為避免低估，預設採計，但建議抽查；若確認為他人，請按「非本人」。"}, {"c": "比對與審核", "q": "「無法判定」是什麼意思？", "a": "WoS 的地址欄無法對應到這位作者（例如地址資料缺漏），系統無從判斷，預設不採計，請人工確認。"}, {"c": "比對與審核", "q": "審核錯了可以改嗎？", "a": "可以。再按一次已選的按鈕即可取消，或直接改按另一個選項。"}, {"c": "比對與審核", "q": "多位審核者可以同時審核再合併嗎？", "a": "目前不支援合併。建議依序傳遞同一份專案檔，或依系所分工後由負責人彙整。"}, {"c": "期刊品質", "q": "有些期刊顯示「查無」JIF 或分區。", "a": "可能為新收錄、僅收錄於 ESCI 而無分區，或 ISSN 不一致。可在 JCR 網站查詢該期刊，並匯入含該期刊的 JCR 官方匯出檔。"}, {"c": "期刊品質", "q": "JCR 網站每次只能匯出 600 筆。", "a": "請依學科類別（如 Oncology、Pharmacology）分次篩選匯出，將多個檔案一併拖入匯入區，系統會自動合併。"}, {"c": "期刊品質", "q": "內建的分區和 JCR 網站看到的不一樣。", "a": "內建資料為非官方整理，且多學科期刊僅存一個分區。正式報告請以匯入的 JCR 官方資料為準。"}, {"c": "報表", "q": "「篇次」和「篇數」有什麼不同？", "a": "同一篇論文若有兩位本單位教師共同發表，在每位教師各計一篇，加總時稱為「篇次」；單位層級的「採計論文（不重複）」則只算一次。"}, {"c": "報表", "q": "統計數字和 WoS 網站上看到的不一樣。", "a": "本工具只計入名單內教師、指定年度與文獻類型，並排除同名他人；WoS 網站若以機構名稱檢索，範圍與口徑不同，數字自然會有差異。"}, {"c": "報表", "q": "如何輸出 PDF？", "a": "在「報表」步驟按「列印…」，工具會以預設瀏覽器開啟報表並跳出列印視窗，選擇「儲存為 PDF」即可。"}, {"c": "API", "q": "按「儲存並驗證」後顯示 API Key 未被接受（401 或 403）。", "a": "401 表示 Key 未被接受：請確認貼上的是 Application 頁面中的「API Key」（不是 Application ID、Client ID 或 Client Secret），且 Starter API 訂閱狀態為 Approved；剛核准的 Key 可能需數分鐘後生效。403 表示未訂閱 Starter API 或權限不足。Key 位置：developer.clarivate.com → 右上角帳號 → Applications → 您的 Application。網頁版的取得程式會顯示相同的訊息。"}, {"c": "API", "q": "API 取得的篇數為 0 或明顯偏少。", "a": "多半是機構名稱與 WoS 的 Organizations-Enhanced 寫法不一致。請到 WoS 網頁以一位教師檢索，於「分析結果 → 機構」確認本校名稱，修改步驟 4 的機構名稱後按「重新取得資料」。"}, {"c": "API", "q": "API 模式為什麼沒有「疑似漏掛」與「同名他人」？", "a": "Starter API 不提供作者地址，系統改以機構條件限定本校，所以回傳的論文都已含本校，統一標示為「機構相符（API）」。若需區分作者本人是否掛本校，請改用網頁匯出 Full Record。"}, {"c": "API", "q": "API Key 會被儲存或外流嗎？", "a": "桌面版會把 Key 存在作業系統的安全儲存區（Mac 鑰匙圈、Windows 認證管理員），只用於連線 Clarivate；Key 不會顯示在畫面上，也不會寫入專案檔或任何一般檔案。不再使用時請按「清除」。網頁版則只在執行取得程式時輸入，不會儲存。請勿將 Key 貼到對話、Email 或共用文件。"}, {"c": "API", "q": "取得資料時顯示「請求太頻繁」或速度變慢。", "a": "Starter API 每秒最多 5 次請求，工具會自動等待 5 秒後重試，不需處理。若當日已用完 5,000 次，請隔天再取得。"}, {"c": "API", "q": "取得資料到一半出錯或我按了停止，資料會怎樣？", "a": "停止或出錯時不會匯入任何不完整的資料，原有資料也不受影響。排除原因後按「開始取得資料」重新執行即可。"}, {"c": "API", "q": "同事要接手，可以把我的 API Key 給他嗎？", "a": "不建議。Free Institutional Member Plan 每位成員一把 Key，請同事以自己的學校信箱申請。交接時傳遞專案檔即可，專案檔不含 Key。"}, {"c": "API", "q": "顯示「無法連線至 Clarivate」。", "a": "請確認網路連線；校外網路若有限制，可改在校內網路或連線學校 VPN 後再試。"}, {"c": "期刊品質", "q": "報表中許多教師的 Q1–Q4 都是 0。", "a": "代表這些論文沒有對應到期刊品質資料（歸入「無分區／查無」）。通常是在步驟 6 匯入了缺少 JIF 或分區欄位的 JCR 檔。請到步驟 6 按「移除」已匯入的 JCR 資料，再重新整理工具。新版已會拒絕這類檔案。"}, {"c": "報表", "q": "報表的職稱欄空白，或教師人數比名單少。", "a": "可能匯入的是先前的統計結果（彙總表），而非教師名單。請改匯入完整教師名單（含職稱與所有教師）。職稱全部空白時，報表會自動隱藏該欄。"}, {"c": "報表", "q": "同時匯入 API 結果與網頁匯出檔，數字會怎樣？", "a": "系統會合併兩者並去除重複，篇數可能比單一來源多，且來源混雜。正式報告建議只使用一種來源：於步驟 4 移除不需要的檔案即可。"}, {"c": "報表", "q": "列印時右側欄位被截斷。", "a": "新版報表已改為 A4 橫式並縮小字級。若仍被截斷，請於列印視窗確認「版面配置」為橫向、縮放為「預設」或「符合頁面寬度」。"}, {"c": "網頁版", "q": "網頁版為什麼要另外下載取得程式？", "a": "瀏覽器安全限制（CORS）不允許網頁直接連線 Clarivate API，因此網頁版需由本機程式取得資料再匯入。桌面版沒有這項限制，可直接在步驟 4 輸入 API Key 取得資料。"}, {"c": "網頁版", "q": "Mac 執行取得程式時顯示沒有權限或無法打開。", "a": "請不要雙擊程式。開啟「終端機」，輸入 bash 與一個空格，再把程式檔拖進視窗後按 Return。此方式不需修改檔案權限。"}, {"c": "網頁版", "q": "Windows 右鍵沒有「用 PowerShell 執行」，或執行後立即關閉。", "a": "請在開始功能表開啟「Windows PowerShell」，輸入 powershell -ExecutionPolicy Bypass -File 後加一個空格，把程式檔拖進視窗後按 Enter。"}, {"c": "網頁版", "q": "取得程式顯示 HTTP 400。", "a": "通常是檢索式或參數有誤。請確認機構名稱與收錄範圍設定；可先將收錄範圍清空後重新下載程式再試。若仍失敗，請將錯誤訊息提供給維護人員。"}, {"c": "其他", "q": "這個工具是誰製作的？", "a": "由醫資三甲 江桂宏、醫學二乙 葉睿穎製作，供中國醫藥大學醫學院教師論文盤點使用。"}]};
+const strip = h => h.replace(/<[^>]+>/g, '');
+function renderHelp(q) {
+  q = (q || '').trim().toLowerCase();
+  const mk = h => { if (!q) return h; const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'); return h.replace(/(<[^>]+>)|([^<]+)/g, (m, tag, txt) => tag || txt.replace(re, '<mark>$1</mark>')); };
+  const hit = s => !q || s.toLowerCase().includes(q);
+  const faq = HELP.faq.filter(f => hit(f.q + f.a + f.c)); const man = HELP.manual.filter(m => hit(m.t + strip(m.b)));
+  $('#hbody').innerHTML = (window.I18N && I18N.lang !== 'zh-TW' ? '<p class="small" style="margin:0 0 10px">說明書與常見問題目前僅有繁體中文版。</p>' : '') + (faq.length ? `<h4>常見問題${q ? `（${faq.length}）` : ''}</h4>` + faq.map(f => `<details ${q ? 'open' : ''}><summary translate="no">${mk(esc(f.q))}<span class="cat">${esc(f.c)}</span></summary><div class="hc" translate="no">${mk(esc(f.a))}</div></details>`).join('') : '')
+    + (man.length ? `<h4>使用說明書${q ? `（${man.length}）` : ''}</h4>` + man.map(m => `<details ${q ? 'open' : ''}><summary translate="no">${mk(esc(m.t))}</summary><div class="hc" translate="no">${mk(m.b)}</div></details>`).join('') : '')
+    + (!faq.length && !man.length ? '<p class="small" style="padding:30px 0;text-align:center">找不到相關內容，請換個關鍵字。</p>' : '')
+    + '<div class="hfoot">教師論文盤點工具　製作：醫資三甲 江桂宏、醫學二乙 葉睿穎</div>';
+}
+function openHelp() { const d = $('#help'); if (!d.open) { d.showModal(); $('#hq').value = ''; renderHelp(''); $('#hq').focus(); } }
+$('#btnHelp').onclick = openHelp; $('#hclose').onclick = () => $('#help').close();
+$('#hq').addEventListener('input', e => renderHelp(e.target.value));
+$('#help').addEventListener('click', e => { if (e.target.id === 'help') $('#help').close(); });
+document.addEventListener('keydown', e => { if (e.key === 'F1' || ((IS_MAC ? e.metaKey : e.ctrlKey) && (e.key === '?' || e.key === '/'))) { e.preventDefault(); openHelp(); } });
+$('#kH').textContent = MOD + '?';
+</script>
+<!--I18N-->
+</body>
+</html>

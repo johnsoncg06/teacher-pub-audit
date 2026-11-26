@@ -6,6 +6,10 @@ Una aplicación de escritorio para revisar las publicaciones anuales del profeso
 
 **Idioma de la interfaz**: con el selector de la esquina inferior izquierda se puede cambiar entre 繁體中文, English, 日本語, 한국어 y Español (por defecto, chino tradicional; la elección se recuerda). La ayuda y preguntas frecuentes y los documentos de instrucciones para IA siguen en chino tradicional; los datos del usuario, como nombres y departamentos, no se traducen.
 
+**Aviso legal sobre las traducciones**: las traducciones de la interfaz al inglés, japonés, coreano y español se han elaborado con ayuda de IA y no han sido revisadas por hablantes nativos. Son solo orientativas y no se garantiza su exactitud; si difieren del original en chino tradicional, prevalece el original. Al elegir un idioma distinto del chino tradicional, la aplicación y el informe muestran este aviso.
+
+**Primer uso**: en el paso 1, pulsa «Cargar datos de ejemplo» para recorrer todo el flujo en unos cinco minutos con una lista y datos de publicaciones ficticios. La revisión manual admite atajos (↑↓ mover, Y es la persona, N otra persona, U quitar marca) y marcado en bloque; el informe permite exportar las «condiciones de cálculo» y una «hoja de muestreo» de 50 elementos para estimar la tasa de error de tus datos.
+
 **Autores**: Chiang Kuei-Hung (Informática Médica, 3.er curso, grupo A) y Yeh Jui-Ying (Medicina, 2.º curso, grupo B), Universidad Médica de China (China Medical University), Taiwán
 
 ## Características

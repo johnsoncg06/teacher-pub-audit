@@ -1,0 +1,10 @@
+{
+  "name": "teacher-pub-audit-tests",
+  "private": true,
+  "description": "測試用；App 本身不需要 Node。執行：npm install && npm test",
+  "scripts": {
+    "build": "python3 src/build.py",
+    "test": "python3 tests/check_dict.py && node tests/test_core.js && node tests/e2e_sample.js && node tests/e2e_api_resume.js && node tests/i18n_coverage.js"
+  },
+  "devDependencies": { "playwright": "^1.48.0" }
+}

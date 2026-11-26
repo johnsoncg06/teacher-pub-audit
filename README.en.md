@@ -6,6 +6,10 @@ A desktop app for auditing faculty members' annual publications in Web of Scienc
 
 **Interface language**: use the selector at the bottom left of the app to switch between 繁體中文, English, 日本語, 한국어 and Español (default: Traditional Chinese; your choice is remembered). The Help/FAQ and the AI prompt documents remain in Traditional Chinese; user data such as names and departments is never translated.
 
+**Translation disclaimer**: the English, Japanese, Korean and Spanish interface translations were produced with AI assistance and have not been reviewed by native speakers. They are for reference only and their accuracy is not guaranteed; if they differ from the Traditional Chinese original, the Traditional Chinese prevails. A notice with this text is shown in the app and in the report whenever a non-Chinese language is selected.
+
+**First time**: on step 1 press “Load sample data” to go through the whole workflow in about five minutes with a fictitious roster and publication data. Manual review supports shortcuts (↑↓ move, Y same person, N different person, U clear) and bulk marking; the report can export the “calculation conditions” and a 50-item “spot-check sheet” for estimating the misjudgment rate of your data.
+
 **Authors**: Chiang Kuei-Hung (Medical Informatics, Year 3, Class A) and Yeh Jui-Ying (Medicine, Year 2, Class B), China Medical University, Taiwan
 
 ## Features
