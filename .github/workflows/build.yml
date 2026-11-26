@@ -188,7 +188,7 @@ jobs:
   release:
     name: 發布最新版本
     needs: [windows, macos]
-    if: ${{ always() && needs.windows.result == 'success' && github.ref == 'refs/heads/main' }}
+    if: ${{ always() && needs.windows.result == 'success' && needs.macos.result == 'success' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
